@@ -745,7 +745,7 @@ function initAdmin() {
 
 // ── DASHBOARD ─────────────────────────────────────────────────────────────────
 async function renderDashboard() {
-  const apps = await sbFetch('applications', 'tcda_applications', []);
+  const apps = await sbFetch('members', 'tcda_members', []);
   const events = await sbFetch('events', 'tcda_events', []);
   const pending = apps.filter(a => a.status === 'pending').length;
   const approved = apps.filter(a => a.status === 'approved').length;
@@ -759,9 +759,9 @@ async function renderDashboard() {
   if (tbody) {
     tbody.innerHTML = recent.length ? recent.map(a => `
       <tr>
-        <td><strong>${a.fname || ''}</strong></td>
+        <td><strong>${a.name || ''}</strong></td>
         <td>${a.email || ''}</td>
-        <td>${a.date || a.created_at?.slice(0,10) || ''}</td>
+        <td>${a.created_at?.slice(0,10) || ''}</td>
         <td><span class="badge badge-${a.status}">${a.status}</span></td>
       </tr>`).join('') : '<tr><td colspan="4" style="text-align:center;color:var(--muted);">ยังไม่มีใบสมัคร</td></tr>';
   }
@@ -769,11 +769,11 @@ async function renderDashboard() {
 
 // ── APPLICATIONS ──────────────────────────────────────────────────────────────
 async function renderApplications() {
-  const apps = await sbFetch('applications', 'tcda_applications', []);
+  const apps = await sbFetch('members', 'tcda_members', []);
   const search = (document.getElementById('appSearch') || {}).value || '';
   const filter = (document.getElementById('appFilter') || {}).value || 'all';
   let filtered = apps.filter(a => {
-    const matchSearch = !search || (a.fname || '').includes(search) || (a.email || '').includes(search);
+    const matchSearch = !search || (a.name || '').includes(search) || (a.email || '').includes(search);
     const matchFilter = filter === 'all' || a.status === filter;
     return matchSearch && matchFilter;
   });
@@ -783,36 +783,36 @@ async function renderApplications() {
     <th>ชื่อ-สกุล</th><th>อีเมล</th><th>โทรศัพท์</th><th>อาชีพ</th><th>ภาค</th><th>วันที่</th><th>สถานะ</th><th>การดำเนินการ</th>
   </tr></thead><tbody>
     ${filtered.length ? filtered.map(a => `<tr>
-      <td><strong>${a.fname || ''}</strong></td>
+      <td><strong>${a.name || ''}</strong></td>
       <td><a href="mailto:${a.email}">${a.email || ''}</a></td>
       <td>${a.phone || '-'}</td>
       <td>${a.occupation || a.type || '-'}</td>
       <td>${a.region || '-'}</td>
-      <td>${a.date || a.created_at?.slice(0,10) || ''}</td>
+      <td>${a.created_at?.slice(0,10) || ''}</td>
       <td><span class="badge badge-${a.status}">${a.status}</span></td>
       <td>
         ${a.status === 'pending' ? `
-          <button class="action-btn approve" onclick="updateApp(${a.id},'approved')">✅</button>
-          <button class="action-btn reject" onclick="updateApp(${a.id},'rejected')">❌</button>
-        ` : `<button class="action-btn" onclick="updateApp(${a.id},'pending')">↩️</button>`}
-        <button class="action-btn danger" onclick="deleteApp(${a.id})">🗑️</button>
+          <button class="action-btn approve" onclick="updateApp(${JSON.stringify(a.id)},'approved')">✅</button>
+          <button class="action-btn reject" onclick="updateApp(${JSON.stringify(a.id)},'rejected')">❌</button>
+        ` : `<button class="action-btn" onclick="updateApp(${JSON.stringify(a.id)},'pending')">↩️</button>`}
+        <button class="action-btn danger" onclick="deleteApp(${JSON.stringify(a.id)})">🗑️</button>
       </td>
     </tr>`).join('') : '<tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--muted)">ไม่พบข้อมูล</td></tr>'}
   </tbody></table>`;
 }
 async function updateApp(id, status) {
-  await sbUpdate('applications', 'tcda_applications', id, { status });
+  await sbUpdate('members', 'tcda_members', id, { status });
   renderApplications(); renderDashboard();
 }
 async function deleteApp(id) {
   if (!confirm('ลบใบสมัครนี้?')) return;
-  await sbDelete('applications', 'tcda_applications', id);
+  await sbDelete('members', 'tcda_members', id);
   renderApplications(); renderDashboard();
 }
 function exportCSV() {
-  const apps = getData('tcda_applications', []);
+  const apps = getData('tcda_members', []);
   const headers = ['ชื่อ', 'อีเมล', 'โทรศัพท์', 'อาชีพ', 'ภาค', 'วันที่', 'สถานะ'];
-  const rows = apps.map(a => [a.fname, a.email, a.phone, a.occupation || a.type, a.region, a.date, a.status].map(v => `"${v || ''}"`).join(','));
+  const rows = apps.map(a => [a.name, a.email, a.phone, a.occupation || a.type, a.region, a.created_at, a.status].map(v => `"${v || ''}"`).join(','));
   const csv = [headers.join(','), ...rows].join('\n');
   const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
