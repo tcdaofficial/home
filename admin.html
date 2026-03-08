@@ -719,12 +719,15 @@ async function uploadLogo() {
   const input = document.getElementById('logo-upload-input');
   if (!input || !input.files[0]) return alert('กรุณาเลือกไฟล์ก่อน');
 
+  // เรียกใช้ฟังก์ชัน uploadToStorage ที่คุณเขียนไว้ด้านบน
   const url = await uploadToStorage(input.files[0], 'logos', 'logo-upload-progress');
-  if (!url) return;
-
-  localStorage.setItem('tcda_logo_url', url);
-  applyLogo(url);
-  showSuccess('logo-success');
+  
+  if (url) {
+    localStorage.setItem('tcda_logo_url', url); // เก็บไว้ใช้ในเครื่อง
+    applyLogo(url); // แสดงผลทันที
+    showSuccess('logo-success');
+    alert('บันทึกโลโก้สำเร็จ! (หมายเหตุ: ค่านี้จะแสดงผลเฉพาะในเบราว์เซอร์นี้)');
+  }
 }
 
 // ── ADMIN LOGIN ───────────────────────────────────────────────────────────────
