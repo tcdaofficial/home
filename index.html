@@ -864,114 +864,94 @@
 </footer>
 
 <script>
-// 1. CONFIGURATION
-const SB_URL = 'https://mfzuwjhptgcbzgvntubm.supabase.co'; 
+// 1. ตั้งค่าการเชื่อมต่อ
+const SB_URL = 'https://mfzuwjhptgcbzgvntubm.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1menV3amhwdGdjYnpndm50dWJtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI4Njg2NjIsImV4cCI6MjA4ODQ0NDY2Mn0.0ZmoDrbf4Ku5UEMvwuQwBJ-Vy8xVh_U66n6xuA12A58';
+const sb = supabase.createClient(SB_URL, SB_KEY);
 
-let sb = null;
-if (SB_URL && SB_KEY) {
-  sb = supabase.createClient(SB_URL, SB_KEY);
-}
-
-// 2. HELPER: ดึงข้อมูลจาก Supabase
-async function sbGet(table) {
-  if (sb) {
-    const { data, error } = await sb.from(table).select('*').order('created_at', { ascending: false });
-    if (!error && data) return data;
-    console.error(`Error fetching ${table}:`, error);
-  }
-  return [];
-}
-
-// 3. ฟังก์ชันดึงกิจกรรม (Events) มาแสดง
+// 2. ฟังก์ชันดึงกิจกรรม (ถ้า Error จะไม่ทำให้หน้าเว็บพัง)
 async function renderEvents() {
-  const container = document.getElementById('events-list');
-  if (!container) return;
-
-  const events = await sbGet('events');
+  const el = document.getElementById('events-list');
+  if(!el) return;
   
-  if (!events || events.length === 0) {
-    container.innerHTML = '<div class="no-events"><h3>ยังไม่มีกิจกรรมในขณะนี้</h3></div>';
-    return;
-  }
-
-  container.innerHTML = events.map(e => {
-    const d = e.date ? new Date(e.date) : null;
-    return `
-      <div class="event-card fade-in">
-        ${e.photo ? 
-          `<div class="event-img-wrap"><img src="${e.photo}" style="width:100%;height:200px;object-fit:cover;"></div>` : 
-          `<div class="event-date-col">
-             <div class="event-day">${d ? d.getDate() : '--'}</div>
-             <div class="event-mon">${d ? d.toLocaleString('en', {month:'short'}) : '---'}</div>
-           </div>`
-        }
-        <div class="event-body">
-          <h3 class="event-title-t">${e.titleTh || e.title || ''}</h3>
-          <p class="event-desc-t">${e.descTh || e.description || ''}</p>
-          ${e.venue ? `<div class="event-venue-t">📍 ${e.venue}</div>` : ''}
-        </div>
-      </div>`;
-  }).join('');
-  
-  initAnimation();
-}
-
-// 4. ฟังก์ชันดึงคณะกรรมการ (Board)
-async function renderBoard() {
-  const container = document.getElementById('board-grid');
-  if (!container) return;
-
-  const board = await sbGet('board');
-  
-  if (!board || board.length === 0) {
-    // ถ้าใน DB ไม่มี ให้ใช้ค่า Default (เลือกใส่ตามต้องการ)
-    container.innerHTML = '<p>กำลังโหลดข้อมูล...</p>';
-    return;
-  }
-
-  container.innerHTML = board.map((m, i) => `
-    <div class="board-card fade-in ${i === 0 ? 'pres' : ''}">
-      <div class="board-avatar">
-        ${m.photo ? `<img src="${m.photo}" alt="${m.th}">` : '🎼'}
-      </div>
-      <div class="bname-th">${m.th || m.name_th}</div>
-      <div class="bname-en">${m.en || m.name_en}</div>
-      <div class="brole">${m.role || m.position}</div>
-    </div>`).join('');
+  try {
+    const { data, error } = await sb.from('events').select('*').order('date', { ascending: true });
     
-  initAnimation();
+    // ถ้าไม่มีข้อมูลใน Supabase ให้โชว์ข้อความแจ้ง
+    if (error || !data || data.length === 0) {
+      el.innerHTML = `
+        <div class="no-events">
+          <div class="no-events-icon">🗓️</div>
+          <h3>ยังไม่มีกิจกรรมที่ประกาศในขณะนี้</h3>
+        </div>`;
+      return;
+    }
+
+    el.innerHTML = data.map(e => {
+      const d = e.date ? new Date(e.date) : null;
+      return `
+        <div class="event-card fade-in">
+          ${e.photo ? `<div class="event-img-wrap"><img src="${e.photo}" style="width:100%;height:200px;object-fit:cover;"></div>` : `<div class="event-date-col"><div class="event-day">${d?d.getDate():'--'}</div><div class="event-mon">${d?d.toLocaleString('th',{month:'short'}):'--'}</div></div>`}
+          <div class="event-body">
+            <h3 class="event-title-t">${e.titleTh || 'กิจกรรม'}</h3>
+            <p class="event-desc-t">${e.descTh || ''}</p>
+            ${e.venue ? `<div class="event-venue-t">📍 ${e.venue}</div>` : ''}
+          </div>
+        </div>`;
+    }).join('');
+    
+    initFadeIn();
+  } catch (err) {
+    console.error("Events Load Error:", err);
+  }
 }
 
-// 5. ระบบ Animation & Logo
-function initAnimation() {
+// 3. ฟังก์ชันดึงคณะกรรมการ (Board)
+async function renderBoard() {
+  const el = document.getElementById('board-grid');
+  if(!el) return;
+
+  try {
+    const { data, error } = await sb.from('board').select('*').order('created_at', { ascending: true });
+    
+    // ถ้าใน Supabase ไม่มีข้อมูล ให้ใช้ข้อมูล Default ในตัวแปรข้างล่างนี้
+    const defaultBoard = [
+      {th:'อ.ดร.ภาวศุทธิ์ พิริยะพงษ์รัตน์', en:'Dr. Pawasut Piriyapongrat', role:'นายกสมาคม / President'},
+      {th:'อ.สถิต สุกจงชัยพฤกษ์', en:'Sathit Sukchongchaipreuk', role:'อุปนายกสมาคม / Vice President'}
+    ];
+
+    const list = (data && data.length > 0) ? data : defaultBoard;
+
+    el.innerHTML = list.map((m, i) => `
+      <div class="board-card fade-in ${i === 0 ? 'pres' : ''}">
+        <div class="board-avatar">${m.photo ? `<img src="${m.photo}">` : (i===0?'🎼':'🎵')}</div>
+        <div class="bname-th">${m.th || m.nameTh || ''}</div>
+        <div class="bname-en">${m.en || m.nameEn || ''}</div>
+        <div class="brole">${m.role || ''}</div>
+      </div>`).join('');
+    
+    initFadeIn();
+  } catch (err) {
+    console.error("Board Load Error:", err);
+  }
+}
+
+// 4. ส่วนเสริมอื่นๆ
+function initFadeIn() {
   const obs = new IntersectionObserver(entries => {
     entries.forEach(e => { if(e.isIntersecting) e.target.classList.add('visible'); });
   }, {threshold: 0.1});
   document.querySelectorAll('.fade-in').forEach(el => obs.observe(el));
 }
 
-function loadLogo() {
-  const LOGO_DEFAULT = "data:image/png;base64,..."; // ใส่ Base64 เดิมของคุณตรงนี้
-  const src = localStorage.getItem('tcda_logo') || LOGO_DEFAULT;
-  document.querySelectorAll('.site-logo-img').forEach(img => {
-    img.src = src;
-    img.style.opacity = '1';
-  });
-}
+function setLang(l){ document.body.classList.toggle('en-mode', l==='en'); }
+function toggleMenu(){ document.getElementById('mobileMenu').classList.toggle('open'); }
 
-// 6. เริ่มทำงานเมื่อโหลดหน้า
+// เริ่มทำงาน
 document.addEventListener('DOMContentLoaded', () => {
-  loadLogo();
   renderEvents();
   renderBoard();
 });
-
-// UI Helpers
-function setLang(l){ document.body.classList.toggle('en-mode', l==='en'); }
-function toggleMenu(){ document.getElementById('mobileMenu').classList.toggle('open'); }
-function openRules(){ document.getElementById('rulesModal').classList.add('open'); }
-function closeRules(){ document.getElementById('rulesModal').classList.remove('open'); }
 </script>
 </body>
 </html>
