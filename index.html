@@ -1027,8 +1027,11 @@ function toggleMenu() {
 // --- 6. Language Toggle ---
 function setLang(lang) {
     document.documentElement.lang = lang;
-    document.querySelectorAll('.th').forEach(el => el.style.display = lang === 'th' ? '' : 'none');
-    document.querySelectorAll('.en').forEach(el => el.style.display = lang === 'en' ? '' : 'none');
+    if (lang === 'en') {
+        document.body.classList.add('en-mode');
+    } else {
+        document.body.classList.remove('en-mode');
+    }
     document.querySelectorAll('.lang-btn').forEach(btn => btn.classList.remove('active'));
     const activeBtn = document.querySelector(`.lang-btn[onclick="setLang('${lang}')"]`);
     if (activeBtn) activeBtn.classList.add('active');
