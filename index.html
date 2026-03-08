@@ -989,23 +989,31 @@ async function doSetPassword() {
 
 async function checkAuthSession() {
   if (!sb) return;
-  // Check URL for invite/recovery token
+
+  // Handle invite/recovery — Supabase puts session in URL hash
   const hash = window.location.hash;
-  if (hash.includes('type=invite') || hash.includes('type=recovery')) {
-    // Supabase will fire onAuthStateChange with SIGNED_IN after processing token
+  if (hash.includes('access_token') || hash.includes('type=invite') || hash.includes('type=recovery')) {
     document.getElementById('loginGate').style.display = 'none';
     document.getElementById('setPasswordGate').style.display = 'block';
-    // Scroll to members area
     setTimeout(() => document.getElementById('members-area').scrollIntoView({ behavior: 'smooth' }), 300);
   }
+
   const { data } = await sb.auth.getSession();
-  if (data.session) showMembersArea(data.session.user);
+  if (data.session) {
+    // If came from invite link, show set password instead of members area
+    if (hash.includes('access_token') || hash.includes('type=invite')) {
+      document.getElementById('loginGate').style.display = 'none';
+      document.getElementById('setPasswordGate').style.display = 'block';
+      setTimeout(() => document.getElementById('members-area').scrollIntoView({ behavior: 'smooth' }), 300);
+    } else {
+      showMembersArea(data.session.user);
+    }
+  }
+
   sb.auth.onAuthStateChange((event, session) => {
     if (event === 'SIGNED_IN' && session) {
-      // Only auto-login if not in set-password flow
-      if (document.getElementById('setPasswordGate').style.display === 'none') {
-        showMembersArea(session.user);
-      }
+      if (document.getElementById('setPasswordGate').style.display === 'block') return;
+      showMembersArea(session.user);
     }
     if (event === 'USER_UPDATED' && session) showMembersArea(session.user);
   });
