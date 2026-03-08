@@ -559,7 +559,11 @@ async function uploadToStorage(file, folder, progressId) {
 
     if (error) {
       console.error('Storage upload error:', error);
-      alert('❌ อัพโหลดไม่สำเร็จ: ' + error.message);
+      if ((error.message || '').toLowerCase().includes('row-level security')) {
+        alert('❌ อัพโหลดรูปไม่สำเร็จ: Storage RLS ยังไม่อนุญาต (ยังบันทึกกิจกรรมได้โดยไม่ใส่รูป)');
+      } else {
+        alert('❌ อัพโหลดไม่สำเร็จ: ' + error.message);
+      }
       return null;
     }
 
@@ -795,6 +799,8 @@ async function renderDashboard() {
 }
 
 // ── APPLICATIONS ──────────────────────────────────────────────────────────────
+let applicationsCache = [];
+
 async function renderApplications() {
   const apps = await sbFetch('members', 'tcda_members', []);
   const search = (document.getElementById('appSearch') || {}).value || '';
@@ -804,12 +810,13 @@ async function renderApplications() {
     const matchFilter = filter === 'all' || a.status === filter;
     return matchSearch && matchFilter;
   });
+  applicationsCache = filtered;
   const el = document.getElementById('applications-table');
   if (!el) return;
   el.innerHTML = `<table><thead><tr>
     <th>ชื่อ-สกุล</th><th>อีเมล</th><th>โทรศัพท์</th><th>อาชีพ</th><th>ภาค</th><th>วันที่</th><th>สถานะ</th><th>การดำเนินการ</th>
   </tr></thead><tbody>
-    ${filtered.length ? filtered.map(a => `<tr>
+    ${filtered.length ? filtered.map((a, idx) => `<tr>
       <td><strong>${a.name || ''}</strong></td>
       <td><a href="mailto:${a.email}">${a.email || ''}</a></td>
       <td>${a.phone || '-'}</td>
@@ -819,17 +826,27 @@ async function renderApplications() {
       <td><span class="badge badge-${a.status}">${a.status}</span></td>
       <td>
         ${a.status === 'pending' ? `
-          <button class="action-btn approve" onclick="updateApp(${JSON.stringify(a.id)},'approved')">✅</button>
-          <button class="action-btn reject" onclick="updateApp(${JSON.stringify(a.id)},'rejected')">❌</button>
-        ` : `<button class="action-btn" onclick="updateApp(${JSON.stringify(a.id)},'pending')">↩️</button>`}
-        <button class="action-btn danger" onclick="deleteApp(${JSON.stringify(a.id)})">🗑️</button>
+          <button class="action-btn approve" onclick="updateAppByIndex(${idx},'approved')">✅</button>
+          <button class="action-btn reject" onclick="updateAppByIndex(${idx},'rejected')">❌</button>
+        ` : `<button class="action-btn" onclick="updateAppByIndex(${idx},'pending')">↩️</button>`}
+        <button class="action-btn danger" onclick="deleteAppByIndex(${idx})">🗑️</button>
       </td>
     </tr>`).join('') : '<tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--muted)">ไม่พบข้อมูล</td></tr>'}
   </tbody></table>`;
 }
+function updateAppByIndex(index, status) {
+  const app = applicationsCache[index];
+  if (!app) return;
+  updateApp(app.id, status);
+}
 async function updateApp(id, status) {
   await sbUpdate('members', 'tcda_members', id, { status });
   renderApplications(); renderDashboard();
+}
+function deleteAppByIndex(index) {
+  const app = applicationsCache[index];
+  if (!app) return;
+  deleteApp(app.id);
 }
 async function deleteApp(id) {
   if (!confirm('ลบใบสมัครนี้?')) return;
@@ -850,14 +867,19 @@ function exportCSV() {
 // ── EVENTS ────────────────────────────────────────────────────────────────────
 let editingEventId = null;
 let editingEventPhoto = '';
+let eventsCache = [];
 
 async function renderEvents() {
   const el = document.getElementById('events-table');
   if (!el) return;
   el.innerHTML = '<p style="color:var(--muted);padding:1rem">⏳ กำลังโหลด...</p>';
   const events = await sbFetch('events', 'tcda_events', []);
+  eventsCache = Array.isArray(events) ? events : [];
   console.log('renderEvents: found', events.length, 'events');
-  el.innerHTML = events.length ? events.map(e => `
+  const localWarn = isLocalOnly('tcda_events')
+    ? '<p style="margin-bottom:10px;color:#92400e;background:#fffbeb;border:1px solid #fde68a;padding:8px 10px;border-radius:8px;font-size:12px">กำลังใช้โหมด Local ชั่วคราว: ข้อมูลกิจกรรมยังไม่ Sync ไป Supabase</p>'
+    : '';
+  el.innerHTML = localWarn + (events.length ? events.map((e, idx) => `
     <div class="item-card">
       ${e.photo ? `<img src="${e.photo}" style="width:60px;height:60px;object-fit:cover;border-radius:8px;flex-shrink:0" onerror="this.style.display='none'">` : '<div style="width:60px;height:60px;border-radius:8px;background:var(--bg);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:1.5rem">📅</div>'}
       <div style="flex:1">
@@ -865,9 +887,21 @@ async function renderEvents() {
         <small style="color:var(--muted)">${e.date || ''} · ${e.venue || ''}</small>
         ${e.photo ? `<br><small style="color:var(--mint)">☁️ Supabase Storage</small>` : ''}
       </div>
-      <button class="action-btn" onclick="startEditEvent(${JSON.stringify(e.id)}, ${JSON.stringify(e.title_th || '')}, ${JSON.stringify(e.title_en || '')}, ${JSON.stringify(e.date || '')}, ${JSON.stringify(e.venue || '')}, ${JSON.stringify(e.desc_th || '')}, ${JSON.stringify(e.photo || '')})">✏️</button>
-      <button class="action-btn danger" onclick="deleteEvent(${JSON.stringify(e.id)}, ${JSON.stringify(e.photo || '')})">🗑️</button>
-    </div>`).join('') : '<p style="color:var(--muted);padding:1rem">ยังไม่มีกิจกรรม</p>';
+      <button class="action-btn" onclick="startEditEventByIndex(${idx})">✏️</button>
+      <button class="action-btn danger" onclick="deleteEventByIndex(${idx})">🗑️</button>
+    </div>`).join('') : '<p style="color:var(--muted);padding:1rem">ยังไม่มีกิจกรรม</p>');
+}
+
+function startEditEventByIndex(index) {
+  const e = eventsCache[index];
+  if (!e) return;
+  startEditEvent(e.id, e.title_th || '', e.title_en || '', e.date || '', e.venue || '', e.desc_th || '', e.photo || '');
+}
+
+function deleteEventByIndex(index) {
+  const e = eventsCache[index];
+  if (!e) return;
+  deleteEvent(e.id, e.photo || '');
 }
 
 function startEditEvent(id, title_th, title_en, date, venue, desc_th, photo) {
