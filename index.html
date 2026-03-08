@@ -916,8 +916,8 @@ async function loadBoard() {
             <div class="board-avatar">
                 <img src="${m.photo || 'default-avatar.png'}" onerror="this.src='https://via.placeholder.com/150'">
             </div>
-            <div class="bname-th">${m.name_th}</div>
-            <div class="bname-en">${m.name_en || ''}</div>
+            <div class="bname-th">${m.th}</div>
+            <div class="bname-en">${m.en || ''}</div>
             <div class="brole">${m.role}</div>
         </div>
     `).join('');
