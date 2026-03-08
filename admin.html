@@ -351,7 +351,8 @@
           </div>
         </div>
         <div class="btn-group">
-          <button class="btn-primary-sm" onclick="addEvent()">➕ เพิ่มกิจกรรม</button>
+          <button class="btn-primary-sm" id="ev-submit-btn" onclick="addEvent()">➕ เพิ่มกิจกรรม</button>
+          <button class="btn-secondary-sm" id="ev-cancel-btn" onclick="cancelEditEvent()" style="display:none">ยกเลิกการแก้ไข</button>
           <button class="btn-secondary-sm" onclick="clearEventForm()">ล้างฟอร์ม</button>
         </div>
       </div>
@@ -593,44 +594,7 @@ async function deleteFromStorage(publicUrl) {
     console.warn('Delete from storage failed:', e);
   }
 }
-   // 2. ฟังก์ชันสำหรับบันทึกกิจกรรม (Events)
-async function saveEvent(eventData) {
-  try {
-    const { data, error } = await sb
-      .from('events') // ชื่อตารางใน Supabase
-      .insert([
-        { 
-          titleTh: eventData.title, 
-          descTh: eventData.desc, 
-          date: eventData.date, 
-          venue: eventData.venue, 
-          photo: eventData.imageUrl // URL รูปภาพที่อัปโหลดแล้ว
-        }
-      ]);
 
-    if (error) throw error;
-    alert("บันทึกข้อมูลเรียบร้อยแล้ว!");
-  } catch (err) {
-    console.error("Error saving:", err.message);
-    alert("เกิดข้อผิดพลาด: " + err.message);
-  }
-}
-   // Board
-  async function updateBoardMember(memberData) {
-  const { data, error } = await sb
-    .from('board')
-    .insert([
-      { 
-        th: memberData.nameTh, 
-        en: memberData.nameEn, 
-        role: memberData.position, 
-        photo: memberData.photoUrl,
-        sort_order: memberData.order 
-      }
-    ]);
-    
-  if(!error) alert("อัปเดตข้อมูลกรรมการสำเร็จ!");
-}
 // preview ก่อนอัพโหลด
 function previewImage(input, previewId) {
   const preview = document.getElementById(previewId);
@@ -719,15 +683,12 @@ async function uploadLogo() {
   const input = document.getElementById('logo-upload-input');
   if (!input || !input.files[0]) return alert('กรุณาเลือกไฟล์ก่อน');
 
-  // เรียกใช้ฟังก์ชัน uploadToStorage ที่คุณเขียนไว้ด้านบน
   const url = await uploadToStorage(input.files[0], 'logos', 'logo-upload-progress');
-  
-  if (url) {
-    localStorage.setItem('tcda_logo_url', url); // เก็บไว้ใช้ในเครื่อง
-    applyLogo(url); // แสดงผลทันที
-    showSuccess('logo-success');
-    alert('บันทึกโลโก้สำเร็จ! (หมายเหตุ: ค่านี้จะแสดงผลเฉพาะในเบราว์เซอร์นี้)');
-  }
+  if (!url) return;
+
+  localStorage.setItem('tcda_logo_url', url);
+  applyLogo(url);
+  showSuccess('logo-success');
 }
 
 // ── ADMIN LOGIN ───────────────────────────────────────────────────────────────
@@ -850,6 +811,9 @@ function exportCSV() {
 }
 
 // ── EVENTS ────────────────────────────────────────────────────────────────────
+let editingEventId = null;
+let editingEventPhoto = '';
+
 async function renderEvents() {
   const el = document.getElementById('events-table');
   if (!el) return;
@@ -864,8 +828,29 @@ async function renderEvents() {
         <small style="color:var(--muted)">${e.date || ''} · ${e.venue || ''}</small>
         ${e.photo ? `<br><small style="color:var(--mint)">☁️ Supabase Storage</small>` : ''}
       </div>
-      <button class="action-btn danger" onclick="deleteEvent(${e.id},'${e.photo || ''}')">🗑️</button>
+      <button class="action-btn" onclick="startEditEvent(${JSON.stringify(e.id)}, ${JSON.stringify(e.title_th || '')}, ${JSON.stringify(e.title_en || '')}, ${JSON.stringify(e.date || '')}, ${JSON.stringify(e.venue || '')}, ${JSON.stringify(e.desc_th || '')}, ${JSON.stringify(e.photo || '')})">✏️</button>
+      <button class="action-btn danger" onclick="deleteEvent(${JSON.stringify(e.id)}, ${JSON.stringify(e.photo || '')})">🗑️</button>
     </div>`).join('') : '<p style="color:var(--muted);padding:1rem">ยังไม่มีกิจกรรม</p>';
+}
+
+function startEditEvent(id, title_th, title_en, date, venue, desc_th, photo) {
+  editingEventId = id;
+  editingEventPhoto = photo || '';
+  document.getElementById('ev-title-th').value = title_th || '';
+  document.getElementById('ev-title-en').value = title_en || '';
+  document.getElementById('ev-date').value = date || '';
+  document.getElementById('ev-venue').value = venue || '';
+  document.getElementById('ev-desc-th').value = desc_th || '';
+  const prev = document.getElementById('ev-preview');
+  if (prev) {
+    prev.src = photo || '';
+    if (photo) prev.classList.add('show'); else prev.classList.remove('show');
+  }
+  const submitBtn = document.getElementById('ev-submit-btn');
+  const cancelBtn = document.getElementById('ev-cancel-btn');
+  if (submitBtn) submitBtn.textContent = '💾 บันทึกการแก้ไข';
+  if (cancelBtn) cancelBtn.style.display = 'inline-block';
+  document.getElementById('panel-events').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 async function addEvent() {
@@ -881,18 +866,34 @@ async function addEvent() {
     photoUrl = await uploadToStorage(photoInput.files[0], 'events', 'ev-upload-progress') || '';
   }
 
-  const row = {
-    id: Date.now(),
+  const base = {
     title_th,
     title_en: get('ev-title-en'),
     date: get('ev-date'),
     venue: get('ev-venue'),
-    desc_th: get('ev-desc-th'),
-    photo: photoUrl,  // ← URL จาก Supabase Storage
-    created_at: new Date().toISOString()
+    desc_th: get('ev-desc-th')
   };
 
-  await sbAdd('events', 'tcda_events', row);
+  // ถ้าแก้ไข ให้ update
+  if (editingEventId !== null && editingEventId !== undefined) {
+    const updates = { ...base };
+    if (photoUrl) {
+      // ลบรูปเก่า ถ้ามีการอัพโหลดรูปใหม่
+      if (editingEventPhoto) await deleteFromStorage(editingEventPhoto);
+      updates.photo = photoUrl;
+      editingEventPhoto = photoUrl;
+    }
+    await sbUpdate('events', 'tcda_events', editingEventId, updates);
+  } else {
+    const row = {
+      id: Date.now(),
+      ...base,
+      photo: photoUrl,  // ← URL จาก Supabase Storage
+      created_at: new Date().toISOString()
+    };
+    await sbAdd('events', 'tcda_events', row);
+  }
+
   clearEventForm();
   await renderEvents();
   // scroll ไปที่ list
@@ -917,6 +918,16 @@ function clearEventForm() {
   if (prev) { prev.src = ''; prev.classList.remove('show'); }
 }
 
+function cancelEditEvent() {
+  editingEventId = null;
+  editingEventPhoto = '';
+  clearEventForm();
+  const submitBtn = document.getElementById('ev-submit-btn');
+  const cancelBtn = document.getElementById('ev-cancel-btn');
+  if (submitBtn) submitBtn.textContent = '➕ เพิ่มกิจกรรม';
+  if (cancelBtn) cancelBtn.style.display = 'none';
+}
+
 // ── BOARD ─────────────────────────────────────────────────────────────────────
 const defaultBoard = [
   {id:1,th:'อ.ดร.ภาวศุทธิ์ พิริยะพงษ์รัตน์',en:'Dr. Pawasut Jodi Piriyapongrat',role:'นายกสมาคม / President',photo:''},
@@ -931,8 +942,8 @@ const defaultBoard = [
   {id:10,th:'อ.ภาธร สวัสดิสุข',en:'Patorn Sawatdisuk',role:'กรรมการ / Director',photo:''},
 ];
 
-function renderBoard() {
-  const board = getData('tcda_board', defaultBoard);
+async function renderBoard() {
+  const board = await sbFetch('board', 'tcda_board', defaultBoard);
   const el = document.getElementById('board-editor');
   if (!el) return;
   el.innerHTML = board.map((m, i) => `
@@ -986,9 +997,8 @@ async function addBoardMember() {
     photoUrl = await uploadToStorage(photoInput.files[0], 'board', 'bm-upload-progress') || '';
   }
 
-  const board = getData('tcda_board', defaultBoard);
-  board.push({ id: Date.now(), th, en, role, photo: photoUrl });
-  setData('tcda_board', board);
+  const row = { id: Date.now(), th, en, role, photo: photoUrl, created_at: new Date().toISOString() };
+  await sbAdd('board', 'tcda_board', row);
 
   // ล้างฟอร์ม
   ['bm-th','bm-en'].forEach(id => { const el = document.getElementById(id); if(el) el.value=''; });
@@ -1005,14 +1015,14 @@ async function updateBoardPhoto(id, input) {
   const url = await uploadToStorage(input.files[0], 'board', `bphoto-prog-${id}`);
   if (!url) return;
 
-  const board = getData('tcda_board', defaultBoard);
+  const board = await sbFetch('board', 'tcda_board', defaultBoard);
   const i = board.findIndex(m => m.id == id);
+  if (i >= 0 && board[i].photo) await deleteFromStorage(board[i].photo);
   if (i >= 0) {
-    // ลบรูปเก่า
-    if (board[i].photo) await deleteFromStorage(board[i].photo);
     board[i].photo = url;
     setData('tcda_board', board);
   }
+  await sbUpdate('board', 'tcda_board', id, { photo: url });
   renderBoard();
 }
 
@@ -1022,21 +1032,28 @@ function toggleBoardEdit(id) {
   document.getElementById('bedit-btn-' + id).style.display = 'none';
   document.getElementById('bsave-btn-' + id).style.display = 'inline-block';
 }
-function saveBoardEdit(id) {
-  const board = getData('tcda_board', defaultBoard);
+async function saveBoardEdit(id) {
+  const board = await sbFetch('board', 'tcda_board', defaultBoard);
   const i = board.findIndex(m => m.id == id);
   if (i >= 0) {
     board[i].th = document.getElementById('bedit-th-' + id).value;
     board[i].en = document.getElementById('bedit-en-' + id).value;
     board[i].role = document.getElementById('bedit-role-' + id).value;
     setData('tcda_board', board);
+    await sbUpdate('board', 'tcda_board', id, {
+      th: board[i].th,
+      en: board[i].en,
+      role: board[i].role
+    });
   }
   renderBoard();
 }
 async function deleteBoard(id, photoUrl) {
   if (!confirm('ลบสมาชิกคนนี้?')) return;
   if (photoUrl) await deleteFromStorage(photoUrl);
-  setData('tcda_board', getData('tcda_board', defaultBoard).filter(m => m.id != id));
+  const board = await sbFetch('board', 'tcda_board', defaultBoard);
+  setData('tcda_board', board.filter(m => m.id != id));
+  await sbDelete('board', 'tcda_board', id);
   renderBoard();
 }
 function resetBoardToDefault() {
