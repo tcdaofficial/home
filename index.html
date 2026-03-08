@@ -1044,8 +1044,8 @@ async function loadMemberContent(){
       <span class="resource-type">${r.type || 'ไฟล์'}</span>
     </div>`).join('') : '<div class="mem-empty">📂 <span class="th">ยังไม่มีทรัพยากร</span><span class="en">No resources yet</span></div>';
 
-  // Directory — count approved members by region
-  const apps = JSON.parse(localStorage.getItem('tcda_applications') || '[]');
+  // Directory — count approved members by region from Supabase
+  const apps = await sbFetch('applications', 'tcda_applications', []);
   const approved = apps.filter(a => a.status === 'approved');
   const regionMap = {
     'กรุงเทพมหานคร': 'dir-bangkok',
