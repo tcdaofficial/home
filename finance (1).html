@@ -1,0 +1,1147 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TCDA Finance — ระบบการเงิน</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Cormorant+Garamond:wght@600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy: #0e1c38;
+  --navy2: #162847;
+  --gold: #b8972a;
+  --gold-lt: #d4b356;
+  --gold-pale: #f5ecd0;
+  --cream: #faf8f3;
+  --ink: #1a1a2e;
+  --green: #1b5e3b;
+  --green-lt: #dcf0e5;
+  --red: #a8311f;
+  --red-lt: #fde8e6;
+  --amber: #c07c00;
+  --amber-lt: #fff3cc;
+  --gray-50: #f8f7f4;
+  --gray-100: #eeece6;
+  --gray-200: #dedad0;
+  --gray-400: #9c9788;
+  --gray-600: #6b6760;
+  --white: #ffffff;
+  --shadow-s: 0 2px 8px rgba(14,28,56,.08);
+  --shadow-m: 0 4px 20px rgba(14,28,56,.12);
+  --shadow-l: 0 12px 48px rgba(14,28,56,.18);
+  --r: 12px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{font-size:15px}
+body{font-family:'Sarabun',sans-serif;background:var(--cream);color:var(--ink);display:flex;min-height:100vh}
+
+/* ── SIDEBAR ─────────────────────────── */
+.sidebar{width:248px;background:var(--navy);flex-shrink:0;display:flex;flex-direction:column;position:fixed;height:100vh;overflow-y:auto;z-index:100}
+.sidebar-head{padding:24px 20px 18px;border-bottom:1px solid rgba(184,151,42,.2)}
+.org-mark{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.mark-circle{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--gold-lt),#7a5e10);display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;font-size:19px;color:#fff;font-weight:700;flex-shrink:0}
+.org-name{font-family:'Cormorant Garamond',serif;font-size:13px;font-weight:700;color:var(--gold-lt);line-height:1.35}
+.org-sub{font-size:10px;color:rgba(184,151,42,.55);letter-spacing:.07em;margin-top:6px;line-height:1.5}
+
+.nav-grp{padding:14px 10px 4px}
+.nav-grp-label{font-size:9.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.28);padding:0 10px;margin-bottom:4px}
+.nav-btn{display:flex;align-items:center;gap:9px;width:100%;padding:9px 12px;border-radius:9px;border:none;background:none;cursor:pointer;color:rgba(255,255,255,.55);font-family:'Sarabun',sans-serif;font-size:13.5px;font-weight:500;text-align:left;transition:all .18s;margin-bottom:1px}
+.nav-btn:hover{background:rgba(184,151,42,.1);color:rgba(255,255,255,.85)}
+.nav-btn.active{background:rgba(184,151,42,.16);color:var(--gold-lt)}
+.nav-btn .ni{width:18px;text-align:center;font-size:15px;opacity:.8}
+.nav-btn .nbadge{margin-left:auto;background:var(--gold);color:var(--navy);font-size:10px;font-weight:700;padding:1px 7px;border-radius:20px}
+
+.sidebar-foot{margin-top:auto;padding:14px 20px;border-top:1px solid rgba(255,255,255,.06);font-size:10.5px;color:rgba(255,255,255,.25);line-height:1.6}
+
+/* ── MAIN ────────────────────────────── */
+.main{margin-left:248px;flex:1;display:flex;flex-direction:column;min-height:100vh}
+.topbar{background:var(--white);border-bottom:1px solid var(--gray-100);padding:14px 28px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:50}
+.topbar-title{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:700;flex:1}
+.content{padding:24px 28px;flex:1}
+
+/* ── BUTTONS ─────────────────────────── */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:8px;border:none;cursor:pointer;font-family:'Sarabun',sans-serif;font-size:13px;font-weight:600;transition:all .18s;white-space:nowrap}
+.btn-primary{background:var(--gold);color:var(--navy)}
+.btn-primary:hover{background:var(--gold-lt);box-shadow:var(--shadow-m);transform:translateY(-1px)}
+.btn-outline{background:transparent;border:1.5px solid var(--gray-200);color:var(--gray-600)}
+.btn-outline:hover{border-color:var(--gold);color:var(--gold)}
+.btn-ghost{background:transparent;color:var(--gray-600)}
+.btn-ghost:hover{background:var(--gray-50)}
+.btn-danger{background:var(--red);color:white}
+.btn-success{background:var(--green);color:white}
+.btn-sm{padding:6px 12px;font-size:12px}
+.btn-xs{padding:4px 9px;font-size:11px}
+
+/* ── CARDS ───────────────────────────── */
+.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px}
+.stat-card{background:var(--white);border-radius:var(--r);padding:18px 20px;box-shadow:var(--shadow-s);border-top:3px solid transparent}
+.stat-income{border-color:var(--green)}
+.stat-expense{border-color:var(--red)}
+.stat-balance{border-color:var(--gold);background:var(--navy)}
+.stat-pending{border-color:var(--amber)}
+.stat-label{font-size:10.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--gray-400);margin-bottom:6px}
+.stat-balance .stat-label{color:rgba(255,255,255,.4)}
+.stat-val{font-family:'JetBrains Mono',monospace;font-size:20px;font-weight:600}
+.stat-balance .stat-val{color:var(--gold-lt)}
+.stat-sub{font-size:11px;color:var(--gray-400);margin-top:3px}
+.stat-balance .stat-sub{color:rgba(255,255,255,.3)}
+
+/* ── TABLE CARD ──────────────────────── */
+.tcard{background:var(--white);border-radius:var(--r);box-shadow:var(--shadow-s);overflow:hidden;margin-bottom:18px}
+.tcard-head{padding:16px 20px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--gray-50)}
+.tcard-title{font-size:14px;font-weight:700}
+table{width:100%;border-collapse:collapse}
+th{background:var(--gray-50);padding:9px 14px;text-align:left;font-size:10.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--gray-400)}
+td{padding:12px 14px;font-size:13px;border-bottom:1px solid var(--gray-50)}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--gray-50)}
+.mono{font-family:'JetBrains Mono',monospace}
+.c-green{color:var(--green);font-weight:600}
+.c-red{color:var(--red);font-weight:600}
+.c-gold{color:var(--gold)}
+
+/* ── BADGES ──────────────────────────── */
+.badge{display:inline-flex;align-items:center;gap:3px;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:700}
+.b-income{background:var(--green-lt);color:var(--green)}
+.b-expense{background:var(--red-lt);color:var(--red)}
+.b-paid{background:var(--green-lt);color:var(--green)}
+.b-pending{background:var(--amber-lt);color:var(--amber)}
+.b-draft{background:var(--gray-100);color:var(--gray-400)}
+.b-overdue{background:var(--red-lt);color:var(--red)}
+.b-tax{background:var(--gold-pale);color:var(--gold)}
+
+/* ── FILTER ROW ──────────────────────── */
+.filter-row{display:flex;gap:8px;align-items:center;margin-bottom:16px;flex-wrap:wrap}
+.search-inp{padding:8px 13px;border:1.5px solid var(--gray-200);border-radius:8px;font-family:'Sarabun',sans-serif;font-size:13px;width:210px;transition:border-color .18s;background:var(--white)}
+.search-inp:focus{outline:none;border-color:var(--gold)}
+select.sel{padding:8px 12px;border:1.5px solid var(--gray-200);border-radius:8px;font-family:'Sarabun',sans-serif;font-size:13px;color:var(--ink);background:var(--white);cursor:pointer;transition:border-color .18s}
+select.sel:focus{outline:none;border-color:var(--gold)}
+
+/* ── MODAL ───────────────────────────── */
+.overlay{display:none;position:fixed;inset:0;background:rgba(14,28,56,.55);backdrop-filter:blur(5px);z-index:200;align-items:center;justify-content:center;padding:20px}
+.overlay.open{display:flex}
+.modal{background:var(--white);border-radius:16px;width:600px;max-width:98vw;max-height:92vh;overflow-y:auto;box-shadow:var(--shadow-l);animation:mup .22s ease}
+@keyframes mup{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+.modal-head{padding:24px 28px 0;display:flex;align-items:flex-start;justify-content:space-between}
+.modal-title{font-family:'Cormorant Garamond',serif;font-size:21px;font-weight:700}
+.modal-close{background:none;border:none;cursor:pointer;font-size:20px;color:var(--gray-400);padding:4px;border-radius:6px;line-height:1}
+.modal-close:hover{background:var(--gray-100)}
+.modal-body{padding:20px 28px}
+.modal-foot{padding:16px 28px;border-top:1px solid var(--gray-100);display:flex;gap:8px;justify-content:flex-end;background:var(--gray-50)}
+
+/* FORM */
+.fg{margin-bottom:14px}
+.fg label{display:block;font-size:11.5px;font-weight:700;color:var(--gray-600);margin-bottom:5px;letter-spacing:.03em}
+.fc{width:100%;padding:9px 13px;border:1.5px solid var(--gray-200);border-radius:9px;font-family:'Sarabun',sans-serif;font-size:14px;color:var(--ink);transition:border-color .18s;background:var(--white)}
+.fc:focus{outline:none;border-color:var(--gold)}
+.fc-mono{font-family:'JetBrains Mono',monospace;font-size:13px}
+.frow{display:grid;gap:14px;margin-bottom:14px}
+.frow-2{grid-template-columns:1fr 1fr}
+.frow-3{grid-template-columns:1fr 1fr 1fr}
+.fdivider{height:1px;background:var(--gray-100);margin:18px 0}
+.fsection-title{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--gray-400);margin-bottom:12px}
+
+/* STEPS (Flow-style) */
+.steps{display:flex;gap:0;margin-bottom:24px;border-radius:10px;overflow:hidden;border:1px solid var(--gray-200)}
+.step{flex:1;padding:10px 14px;text-align:center;background:var(--white);cursor:pointer;transition:all .18s;position:relative;font-size:12px;font-weight:600;color:var(--gray-400)}
+.step+.step{border-left:1px solid var(--gray-200)}
+.step.done{background:var(--green-lt);color:var(--green)}
+.step.active{background:var(--navy);color:var(--gold-lt)}
+.step-num{font-family:'JetBrains Mono',monospace;font-size:10px;display:block;margin-bottom:2px;opacity:.6}
+
+/* INVOICE PRINT */
+.inv-preview{font-family:'Sarabun',sans-serif}
+.inv-header{background:var(--navy);padding:24px 32px;display:flex;justify-content:space-between;align-items:flex-start}
+.inv-org-name{font-family:'Cormorant Garamond',serif;font-size:17px;font-weight:700;color:var(--gold-lt)}
+.inv-org-detail{font-size:11px;color:rgba(255,255,255,.45);margin-top:3px;line-height:1.7}
+.inv-doc-type{text-align:right}
+.inv-doc-label{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:700;color:var(--white)}
+.inv-doc-label-th{font-size:13px;color:var(--gold-lt);font-weight:600}
+.inv-doc-no{font-family:'JetBrains Mono',monospace;font-size:11px;color:rgba(255,255,255,.5);margin-top:4px}
+.inv-body{padding:28px 32px}
+.inv-meta{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px}
+.inv-meta-box{background:var(--gray-50);border-radius:9px;padding:14px 16px}
+.inv-meta-label{font-size:9.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--gray-400);margin-bottom:6px}
+.inv-meta-val{font-size:13px;font-weight:600;line-height:1.5}
+.inv-meta-val-sm{font-size:12px;color:var(--gray-600);line-height:1.6}
+.inv-items table th{background:var(--navy);color:rgba(255,255,255,.7)}
+.inv-items table td{vertical-align:top}
+.inv-totals{margin-top:16px;display:flex;justify-content:flex-end}
+.inv-totals-box{width:260px}
+.inv-tot-row{display:flex;justify-content:space-between;padding:5px 0;font-size:13px}
+.inv-tot-row.total-final{border-top:2px solid var(--navy);margin-top:6px;padding-top:10px;font-weight:700;font-size:16px}
+.inv-tot-row .amt{font-family:'JetBrains Mono',monospace}
+.inv-footer{background:var(--gray-50);padding:14px 32px 20px;display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:16px}
+.inv-sig-box{text-align:center;padding-top:40px}
+.inv-sig-line{border-top:1px solid var(--gray-400);margin-bottom:6px}
+.inv-sig-label{font-size:11px;color:var(--gray-400)}
+.inv-note-box{background:var(--amber-lt);border-left:3px solid var(--amber);border-radius:0 6px 6px 0;padding:10px 14px;margin-top:16px;font-size:12px;color:var(--amber)}
+.inv-stamp{display:inline-block;border:3px solid var(--green);color:var(--green);border-radius:50%;width:72px;height:72px;line-height:66px;text-align:center;font-weight:800;font-size:12px;transform:rotate(-15deg);letter-spacing:.05em;margin-top:-10px}
+.inv-watermark{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;opacity:.04;font-family:'Cormorant Garamond',serif;font-size:90px;font-weight:700;color:var(--navy);transform:rotate(-30deg)}
+
+/* SLIP LIST */
+.slip-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
+.slip-card{background:var(--white);border-radius:var(--r);padding:18px;box-shadow:var(--shadow-s);border-left:4px solid var(--gold);cursor:pointer;transition:all .18s}
+.slip-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-m)}
+.slip-no{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--gray-400)}
+.slip-amt{font-family:'JetBrains Mono',monospace;font-size:20px;font-weight:700;color:var(--navy);margin:6px 0 2px}
+.slip-from{font-size:13.5px;font-weight:600}
+.slip-meta{font-size:11.5px;color:var(--gray-400);margin-top:3px}
+
+/* IMPORT BOX */
+.import-box{background:linear-gradient(135deg,var(--navy) 0%,var(--navy2) 100%);border-radius:var(--r);padding:18px 22px;margin-bottom:18px;display:flex;align-items:center;justify-content:space-between;gap:14px}
+.import-box-text h4{color:var(--gold-lt);font-size:13.5px;font-weight:700;margin-bottom:3px}
+.import-box-text p{color:rgba(255,255,255,.5);font-size:11.5px}
+.import-box-btns{display:flex;gap:8px;flex-shrink:0}
+.btn-ghost-gold{background:transparent;border:1.5px solid rgba(184,151,42,.5);color:var(--gold-lt)}
+.btn-ghost-gold:hover{border-color:var(--gold-lt);background:rgba(184,151,42,.08)}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;right:24px;padding:13px 20px;border-radius:10px;font-size:13px;font-weight:600;box-shadow:var(--shadow-l);z-index:9999;animation:mup .25s ease;max-width:380px}
+.toast-ok{background:var(--green);color:white}
+.toast-err{background:var(--red);color:white}
+
+/* TABS */
+.tabs{display:flex;gap:3px;background:var(--gray-100);border-radius:10px;padding:3px;margin-bottom:20px}
+.tab-btn{padding:8px 18px;border-radius:8px;border:none;background:none;cursor:pointer;font-family:'Sarabun',sans-serif;font-size:13px;font-weight:600;color:var(--gray-400);transition:all .18s}
+.tab-btn.active{background:var(--white);color:var(--navy);box-shadow:var(--shadow-s)}
+.tab-pane{display:none}
+.tab-pane.active{display:block}
+
+/* SECTION */
+.page{display:none}
+.page.active{display:block}
+
+/* Google Sheet sync UI */
+.gsheet-bar{background:var(--white);border:1.5px solid var(--gray-200);border-radius:var(--r);padding:14px 18px;display:flex;align-items:center;gap:12px;margin-bottom:18px}
+.gsheet-logo{width:28px;height:28px;flex-shrink:0}
+.gsheet-info{flex:1}
+.gsheet-info h5{font-size:13px;font-weight:700;margin-bottom:1px}
+.gsheet-info p{font-size:11.5px;color:var(--gray-400)}
+.gsheet-status{font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px}
+.gs-connected{background:var(--green-lt);color:var(--green)}
+.gs-disconnected{background:var(--gray-100);color:var(--gray-400)}
+.gsheet-url-row{display:flex;gap:8px;margin-top:10px}
+.gsheet-url-row input{flex:1}
+
+/* Report chart */
+.bar-chart{display:flex;flex-direction:column;gap:8px;padding:18px 20px}
+.bar-row{display:flex;align-items:center;gap:10px}
+.bar-label{font-size:12px;width:160px;flex-shrink:0;color:var(--gray-600)}
+.bar-track{flex:1;height:10px;background:var(--gray-100);border-radius:20px;overflow:hidden}
+.bar-fill{height:100%;border-radius:20px;transition:width .6s ease}
+.bar-income-fill{background:var(--green)}
+.bar-expense-fill{background:var(--red)}
+.bar-amt{font-family:'JetBrains Mono',monospace;font-size:11.5px;width:110px;text-align:right;flex-shrink:0}
+
+@media print{
+  .sidebar,.topbar,.filter-row,.import-box,.gsheet-bar,.btn,.tabs,.stat-grid,.tcard:not(.print-target){display:none!important}
+  .main{margin:0}
+  .content{padding:0}
+  .inv-preview{box-shadow:none}
+  .overlay.open{background:none;backdrop-filter:none;position:static;display:block;padding:0}
+  .modal{box-shadow:none;border-radius:0;max-height:none;width:100%}
+  .modal-head,.modal-foot,.overlay > .modal > .modal-head,.overlay > .modal > .modal-foot{display:none!important}
+  #printArea{display:block!important}
+}
+#printArea{display:none}
+</style>
+</head>
+<body>
+
+<!-- ═══ SIDEBAR ═══ -->
+<aside class="sidebar">
+  <div class="sidebar-head">
+    <div class="org-mark">
+      <div class="mark-circle">♪</div>
+      <div class="org-name">สมาคมผู้อำนวยเพลง<br>ขับประสานเสียง (ประเทศไทย)</div>
+    </div>
+    <div class="org-sub">Thailand Choral Directors Association<br>ระบบการเงิน v2.0</div>
+  </div>
+
+  <div class="nav-grp">
+    <div class="nav-grp-label">ภาพรวม</div>
+    <button class="nav-btn active" onclick="nav('dashboard',this)"><span class="ni">📊</span>แดชบอร์ด</button>
+  </div>
+  <div class="nav-grp">
+    <div class="nav-grp-label">เอกสารการเงิน</div>
+    <button class="nav-btn" onclick="nav('transactions',this)"><span class="ni">📒</span>รายรับ-รายจ่าย</button>
+    <button class="nav-btn" id="nav-invoices" onclick="nav('invoices',this)"><span class="ni">📄</span>Invoice / ใบแจ้งหนี้</button>
+    <button class="nav-btn" id="nav-taxinvoice" onclick="nav('taxinvoice',this)"><span class="ni">🧾</span>ใบกำกับภาษี</button>
+    <button class="nav-btn" onclick="nav('receipts',this)"><span class="ni">✅</span>ใบเสร็จรับเงิน</button>
+    <button class="nav-btn" onclick="nav('slips',this)"><span class="ni">💸</span>Slip การโอน</button>
+  </div>
+  <div class="nav-grp">
+    <div class="nav-grp-label">เชื่อมต่อ</div>
+    <button class="nav-btn" onclick="nav('gsheet',this)"><span class="ni">📗</span>Google Sheets</button>
+  </div>
+  <div class="nav-grp">
+    <div class="nav-grp-label">รายงาน</div>
+    <button class="nav-btn" onclick="nav('report',this)"><span class="ni">📈</span>รายงานสรุป</button>
+  </div>
+
+  <div class="sidebar-foot">สมาคมผู้อำนวยเพลงขับประสานเสียง<br>© 2025 — ระบบ TCDA Finance v2</div>
+</aside>
+
+<!-- ═══ MAIN ═══ -->
+<main class="main">
+  <div class="topbar">
+    <div class="topbar-title" id="topbarTitle">แดชบอร์ด</div>
+    <button class="btn btn-ghost btn-sm" onclick="window.print()">🖨️ พิมพ์</button>
+    <button class="btn btn-primary btn-sm" id="topAddBtn" onclick="openTxModal()">+ เพิ่มรายการ</button>
+  </div>
+
+  <div class="content">
+
+    <!-- ── DASHBOARD ── -->
+    <div class="page active" id="page-dashboard">
+      <div class="stat-grid" id="statGrid"></div>
+      <div class="tcard">
+        <div class="tcard-head"><span class="tcard-title">รายการล่าสุด</span><button class="btn btn-ghost btn-sm" onclick="nav('transactions',document.querySelector('.nav-btn'))">ดูทั้งหมด →</button></div>
+        <table><thead><tr><th>วันที่</th><th>รายการ</th><th>ประเภท</th><th>หมวด</th><th>จำนวนเงิน</th></tr></thead>
+        <tbody id="recentRows"></tbody></table>
+      </div>
+    </div>
+
+    <!-- ── TRANSACTIONS ── -->
+    <div class="page" id="page-transactions">
+      <div class="filter-row">
+        <input class="search-inp" placeholder="🔍 ค้นหา..." id="txQ" oninput="renderTx()">
+        <select class="sel" id="txType" onchange="renderTx()"><option value="">ทุกประเภท</option><option value="income">รายรับ</option><option value="expense">รายจ่าย</option></select>
+        <select class="sel" id="txCat" onchange="renderTx()"><option value="">ทุกหมวด</option></select>
+        <div style="margin-left:auto;display:flex;gap:8px">
+          <button class="btn btn-outline btn-sm" onclick="exportTxCSV()">⬆️ Export</button>
+          <label class="btn btn-outline btn-sm" style="cursor:pointer">📥 Import CSV<input type="file" accept=".csv" style="display:none" onchange="importTxCSV(this)"></label>
+          <button class="btn btn-primary btn-sm" onclick="openTxModal()">+ เพิ่ม</button>
+        </div>
+      </div>
+      <div class="tcard">
+        <table><thead><tr><th>วันที่</th><th>รายการ</th><th>หมวด</th><th>ประเภท</th><th>อ้างอิง</th><th class="mono">จำนวนเงิน</th><th></th></tr></thead>
+        <tbody id="txRows"></tbody></table>
+      </div>
+    </div>
+
+    <!-- ── INVOICES ── -->
+    <div class="page" id="page-invoices">
+      <div class="filter-row">
+        <input class="search-inp" placeholder="🔍 ค้นหา..." id="invQ" oninput="renderInv()">
+        <select class="sel" id="invStatus" onchange="renderInv()"><option value="">ทุกสถานะ</option><option value="draft">ร่าง</option><option value="pending">รอชำระ</option><option value="paid">ชำระแล้ว</option></select>
+        <div style="margin-left:auto"><button class="btn btn-primary btn-sm" onclick="openInvWizard()">+ สร้าง Invoice</button></div>
+      </div>
+      <div class="tcard">
+        <table><thead><tr><th>เลขที่</th><th>วันที่</th><th>ผู้รับ</th><th>รายการ</th><th>สถานะ</th><th class="mono">ยอด</th><th></th></tr></thead>
+        <tbody id="invRows"></tbody></table>
+      </div>
+    </div>
+
+    <!-- ── TAX INVOICE ── -->
+    <div class="page" id="page-taxinvoice">
+      <div class="filter-row">
+        <input class="search-inp" placeholder="🔍 ค้นหา..." id="taxQ" oninput="renderTax()">
+        <select class="sel" id="taxStatus" onchange="renderTax()"><option value="">ทุกสถานะ</option><option value="draft">ร่าง</option><option value="issued">ออกแล้ว</option></select>
+        <div style="margin-left:auto"><button class="btn btn-primary btn-sm" onclick="openTaxWizard()">+ ออกใบกำกับภาษี</button></div>
+      </div>
+      <div class="tcard">
+        <table><thead><tr><th>เลขที่</th><th>วันที่</th><th>ผู้ซื้อ/สมาชิก</th><th>เลขผู้เสียภาษี</th><th>สถานะ</th><th class="mono">ก่อน VAT</th><th class="mono">VAT 7%</th><th class="mono">ยอดรวม</th><th></th></tr></thead>
+        <tbody id="taxRows"></tbody></table>
+      </div>
+    </div>
+
+    <!-- ── RECEIPTS ── -->
+    <div class="page" id="page-receipts">
+      <div class="filter-row">
+        <input class="search-inp" placeholder="🔍 ค้นหา..." id="recQ" oninput="renderRec()">
+        <div style="margin-left:auto"><button class="btn btn-primary btn-sm" onclick="openRecWizard()">+ ออกใบเสร็จ</button></div>
+      </div>
+      <div class="tcard">
+        <table><thead><tr><th>เลขที่</th><th>วันที่</th><th>ผู้รับเงิน/ชำระ</th><th>รายการ</th><th class="mono">ยอด</th><th></th></tr></thead>
+        <tbody id="recRows"></tbody></table>
+      </div>
+    </div>
+
+    <!-- ── SLIPS ── -->
+    <div class="page" id="page-slips">
+      <div class="import-box">
+        <div class="import-box-text">
+          <h4>📥 นำเข้า Slip จำนวนมากจาก Excel / CSV</h4>
+          <p>ดาวน์โหลดแม่แบบ → กรอกใน Excel → อัปโหลดทีเดียวได้ไม่จำกัด</p>
+        </div>
+        <div class="import-box-btns">
+          <button class="btn btn-ghost-gold btn-sm" onclick="dlSlipTemplate()">⬇️ แม่แบบ</button>
+          <label class="btn btn-primary btn-sm" style="cursor:pointer">📂 Import CSV<input type="file" accept=".csv" style="display:none" onchange="importSlips(this)"></label>
+          <button class="btn btn-ghost-gold btn-sm" onclick="exportSlips()">⬆️ Export</button>
+        </div>
+      </div>
+      <div class="filter-row">
+        <input class="search-inp" placeholder="🔍 ค้นหา..." id="slipQ" oninput="renderSlips()">
+        <span id="slipCountLbl" style="font-size:12px;color:var(--gray-400)"></span>
+        <div style="margin-left:auto"><button class="btn btn-primary btn-sm" onclick="openSlipModal()">+ บันทึก Slip</button></div>
+      </div>
+      <div class="slip-grid" id="slipGrid"></div>
+    </div>
+
+    <!-- ── GOOGLE SHEETS ── -->
+    <div class="page" id="page-gsheet">
+      <div class="tcard" style="padding:0">
+        <div class="tcard-head"><span class="tcard-title">🔗 เชื่อมต่อ Google Sheets</span></div>
+        <div style="padding:20px 24px">
+          <div class="gsheet-bar">
+            <svg class="gsheet-logo" viewBox="0 0 48 48"><rect width="48" height="48" rx="6" fill="#0F9D58"/><path d="M16 13h16v4H16zm0 8h16v4H16zm0 8h10v4H16z" fill="white" opacity=".9"/></svg>
+            <div class="gsheet-info">
+              <h5>Google Sheets Sync</h5>
+              <p id="gsStatusText">ยังไม่ได้เชื่อมต่อ — ใส่ URL ของ Google Sheet เพื่อเริ่มต้น</p>
+            </div>
+            <span class="gsheet-status gs-disconnected" id="gsBadge">ยังไม่เชื่อม</span>
+          </div>
+
+          <div class="fsection-title">Google Sheet URL (Publish to Web)</div>
+          <div style="background:var(--amber-lt);border-radius:8px;padding:12px 16px;margin-bottom:14px;font-size:12.5px;color:var(--amber);line-height:1.7">
+            <b>วิธีตั้งค่า Google Sheet:</b><br>
+            1. เปิด Google Sheet ที่ต้องการ → <b>File → Share → Publish to web</b><br>
+            2. เลือก Sheet ที่ต้องการ → Format: <b>CSV</b> → กด Publish → Copy ลิงก์<br>
+            3. วางลิงก์ด้านล่าง แล้วกด <b>บันทึกและ Import</b>
+          </div>
+          <div class="fg">
+            <label>URL ของ Sheet รายรับ-รายจ่าย (CSV)</label>
+            <div class="gsheet-url-row">
+              <input class="fc" id="gsTxUrl" placeholder="https://docs.google.com/spreadsheets/d/.../pub?output=csv">
+              <button class="btn btn-primary btn-sm" onclick="importFromGSheet('tx')">📥 Import รายรับจ่าย</button>
+            </div>
+          </div>
+          <div class="fg">
+            <label>URL ของ Sheet Slip (CSV)</label>
+            <div class="gsheet-url-row">
+              <input class="fc" id="gsSlipUrl" placeholder="https://docs.google.com/spreadsheets/d/.../pub?output=csv">
+              <button class="btn btn-primary btn-sm" onclick="importFromGSheet('slip')">📥 Import Slips</button>
+            </div>
+          </div>
+          <div class="fdivider"></div>
+          <div class="fsection-title">Export ข้อมูลออกไป Google Sheets</div>
+          <p style="font-size:12.5px;color:var(--gray-400);margin-bottom:14px">Download CSV แล้ว Import เข้า Google Sheets ได้โดยตรง (File → Import)</p>
+          <div style="display:flex;gap:10px;flex-wrap:wrap">
+            <button class="btn btn-outline btn-sm" onclick="exportTxCSV()">⬆️ Export รายรับ-รายจ่าย (.csv)</button>
+            <button class="btn btn-outline btn-sm" onclick="exportSlips()">⬆️ Export Slips (.csv)</button>
+            <button class="btn btn-outline btn-sm" onclick="exportInvCSV()">⬆️ Export Invoices (.csv)</button>
+            <button class="btn btn-outline btn-sm" onclick="exportTaxCSV()">⬆️ Export ใบกำกับภาษี (.csv)</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── REPORT ── -->
+    <div class="page" id="page-report">
+      <div class="stat-grid" id="rStatGrid" style="grid-template-columns:repeat(3,1fr)"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        <div class="tcard">
+          <div class="tcard-head"><span class="tcard-title">รายรับตามหมวด</span></div>
+          <div class="bar-chart" id="incomeChart"></div>
+        </div>
+        <div class="tcard">
+          <div class="tcard-head"><span class="tcard-title">รายจ่ายตามหมวด</span></div>
+          <div class="bar-chart" id="expenseChart"></div>
+        </div>
+      </div>
+      <div class="tcard" style="margin-top:16px">
+        <div class="tcard-head"><span class="tcard-title">ตารางสรุปทั้งหมด</span></div>
+        <table><thead><tr><th>หมวด</th><th>ประเภท</th><th>ครั้ง</th><th class="mono">รวมเงิน</th></tr></thead>
+        <tbody id="reportRows"></tbody></table>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</main>
+
+<!-- print target -->
+<div id="printArea"></div>
+
+<!-- ═══ MODALS ═══ -->
+
+<!-- ADD TRANSACTION -->
+<div class="overlay" id="txModal">
+  <div class="modal" style="width:540px">
+    <div class="modal-head"><div class="modal-title">เพิ่มรายการรายรับ-รายจ่าย</div><button class="modal-close" onclick="closeM('txModal')">✕</button></div>
+    <div class="modal-body">
+      <div class="frow frow-2">
+        <div class="fg"><label>วันที่</label><input type="date" class="fc" id="f-date"></div>
+        <div class="fg"><label>ประเภท</label><select class="fc" id="f-type" onchange="updateTxCats()"><option value="income">รายรับ</option><option value="expense">รายจ่าย</option></select></div>
+      </div>
+      <div class="fg"><label>รายการ</label><input type="text" class="fc" id="f-desc" placeholder="ระบุรายการ..."></div>
+      <div class="frow frow-2">
+        <div class="fg"><label>หมวดหมู่</label><select class="fc" id="f-cat"></select></div>
+        <div class="fg"><label>จำนวนเงิน (บาท)</label><input type="number" class="fc fc-mono" id="f-amount" placeholder="0.00" min="0"></div>
+      </div>
+      <div class="fg"><label>อ้างอิง / หมายเหตุ</label><input type="text" class="fc" id="f-ref" placeholder="เลขโอน, ชื่อผู้โอน..."></div>
+    </div>
+    <div class="modal-foot"><button class="btn btn-ghost" onclick="closeM('txModal')">ยกเลิก</button><button class="btn btn-primary" onclick="saveTx()">💾 บันทึก</button></div>
+  </div>
+</div>
+
+<!-- INVOICE WIZARD -->
+<div class="overlay" id="invModal">
+  <div class="modal" style="width:620px">
+    <div class="modal-head"><div class="modal-title" id="invModalTitle">สร้าง Invoice ใหม่</div><button class="modal-close" onclick="closeM('invModal')">✕</button></div>
+    <div class="modal-body">
+      <div class="steps" id="invSteps">
+        <div class="step active" data-s="0"><span class="step-num">01</span>ข้อมูลผู้รับ</div>
+        <div class="step" data-s="1"><span class="step-num">02</span>รายการ</div>
+        <div class="step" data-s="2"><span class="step-num">03</span>สรุป</div>
+      </div>
+      <!-- Step 0 -->
+      <div id="inv-s0">
+        <div class="frow frow-2">
+          <div class="fg"><label>เลขที่ Invoice</label><input type="text" class="fc fc-mono" id="inv-no" readonly></div>
+          <div class="fg"><label>วันที่ออก</label><input type="date" class="fc" id="inv-date"></div>
+        </div>
+        <div class="fg"><label>ชื่อผู้รับ / สมาชิก</label><input type="text" class="fc" id="inv-to" placeholder="ชื่อ-นามสกุล หรือองค์กร"></div>
+        <div class="frow frow-2">
+          <div class="fg"><label>วันครบกำหนด</label><input type="date" class="fc" id="inv-due"></div>
+          <div class="fg"><label>สถานะ</label><select class="fc" id="inv-status"><option value="pending">รอชำระ</option><option value="paid">ชำระแล้ว</option><option value="draft">ร่าง</option></select></div>
+        </div>
+      </div>
+      <!-- Step 1 -->
+      <div id="inv-s1" style="display:none">
+        <div class="fg"><label>รายการ / บริการ</label><input type="text" class="fc" id="inv-item" placeholder="ค่าสมาชิก, ค่าลงทะเบียน..."></div>
+        <div class="frow frow-2">
+          <div class="fg"><label>จำนวนเงิน (บาท)</label><input type="number" class="fc fc-mono" id="inv-amount" placeholder="0.00" oninput="calcInvTotal()"></div>
+          <div class="fg"><label>หมายเหตุ</label><input type="text" class="fc" id="inv-note" placeholder="..."></div>
+        </div>
+      </div>
+      <!-- Step 2 -->
+      <div id="inv-s2" style="display:none">
+        <div style="background:var(--gray-50);border-radius:10px;padding:18px">
+          <div id="inv-preview-mini" style="font-size:13px;line-height:2"></div>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-top:16px" id="invStepNav">
+        <button class="btn btn-ghost" id="invBack" onclick="invStep(-1)" style="visibility:hidden">← ย้อนกลับ</button>
+        <button class="btn btn-primary" id="invNext" onclick="invStep(1)">ถัดไป →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TAX INVOICE WIZARD -->
+<div class="overlay" id="taxModal">
+  <div class="modal" style="width:640px">
+    <div class="modal-head"><div class="modal-title">ออกใบกำกับภาษี</div><button class="modal-close" onclick="closeM('taxModal')">✕</button></div>
+    <div class="modal-body">
+      <div class="fsection-title">ข้อมูลผู้ขาย (สมาคมฯ)</div>
+      <div class="frow frow-2">
+        <div class="fg"><label>เลขที่ใบกำกับภาษี</label><input type="text" class="fc fc-mono" id="tax-no" readonly></div>
+        <div class="fg"><label>วันที่ออก</label><input type="date" class="fc" id="tax-date"></div>
+      </div>
+      <div class="frow frow-2">
+        <div class="fg"><label>เลขประจำตัวผู้เสียภาษีสมาคม</label><input type="text" class="fc fc-mono" id="tax-seller-id" placeholder="1-2345-67890-12-3"></div>
+        <div class="fg"><label>ประเภทใบกำกับภาษี</label>
+          <select class="fc" id="tax-doc-type">
+            <option value="full">ใบกำกับภาษีเต็มรูปแบบ</option>
+            <option value="short">ใบกำกับภาษีอย่างย่อ</option>
+          </select>
+        </div>
+      </div>
+      <div class="fdivider"></div>
+      <div class="fsection-title">ข้อมูลผู้ซื้อ / สมาชิก</div>
+      <div class="fg"><label>ชื่อผู้ซื้อ / สมาชิก</label><input type="text" class="fc" id="tax-buyer" placeholder="ชื่อ-นามสกุล หรือองค์กร"></div>
+      <div class="frow frow-2">
+        <div class="fg"><label>เลขผู้เสียภาษีผู้ซื้อ</label><input type="text" class="fc fc-mono" id="tax-buyer-id" placeholder="หรือเลขบัตรประชาชน 13 หลัก"></div>
+        <div class="fg"><label>ที่อยู่ผู้ซื้อ</label><input type="text" class="fc" id="tax-buyer-addr" placeholder="ที่อยู่สำหรับออกใบกำกับ"></div>
+      </div>
+      <div class="fdivider"></div>
+      <div class="fsection-title">รายการสินค้า / บริการ</div>
+      <div class="fg"><label>รายการ</label><input type="text" class="fc" id="tax-item" placeholder="ค่าสมาชิก, ค่าลงทะเบียน..."></div>
+      <div class="frow frow-3">
+        <div class="fg"><label>ราคาก่อน VAT (บาท)</label><input type="number" class="fc fc-mono" id="tax-before" placeholder="0.00" oninput="calcVat()"></div>
+        <div class="fg"><label>VAT 7%</label><input type="text" class="fc fc-mono" id="tax-vat" readonly placeholder="0.00" style="background:var(--gray-50)"></div>
+        <div class="fg"><label>ยอดรวมทั้งสิ้น</label><input type="text" class="fc fc-mono" id="tax-total" readonly placeholder="0.00" style="background:var(--gray-50);font-weight:700"></div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeM('taxModal')">ยกเลิก</button>
+      <button class="btn btn-outline" onclick="saveTaxDoc('draft')">บันทึกร่าง</button>
+      <button class="btn btn-primary" onclick="saveTaxDoc('issued')">✅ ออกใบกำกับภาษี</button>
+    </div>
+  </div>
+</div>
+
+<!-- RECEIPT WIZARD -->
+<div class="overlay" id="recModal">
+  <div class="modal" style="width:560px">
+    <div class="modal-head"><div class="modal-title">ออกใบเสร็จรับเงิน</div><button class="modal-close" onclick="closeM('recModal')">✕</button></div>
+    <div class="modal-body">
+      <div class="frow frow-2">
+        <div class="fg"><label>เลขที่ใบเสร็จ</label><input type="text" class="fc fc-mono" id="rec-no" readonly></div>
+        <div class="fg"><label>วันที่รับเงิน</label><input type="date" class="fc" id="rec-date"></div>
+      </div>
+      <div class="fg"><label>รับเงินจาก</label><input type="text" class="fc" id="rec-from" placeholder="ชื่อ-นามสกุล ผู้ชำระเงิน"></div>
+      <div class="fg"><label>รายการ</label><input type="text" class="fc" id="rec-item" placeholder="ค่าสมาชิก, ค่าลงทะเบียน..."></div>
+      <div class="frow frow-2">
+        <div class="fg"><label>จำนวนเงิน (บาท)</label><input type="number" class="fc fc-mono" id="rec-amount" placeholder="0.00"></div>
+        <div class="fg"><label>วิธีชำระ</label>
+          <select class="fc" id="rec-method">
+            <option>โอนเงิน</option><option>เงินสด</option><option>พร้อมเพย์</option><option>บัตรเครดิต</option><option>อื่นๆ</option>
+          </select>
+        </div>
+      </div>
+      <div class="fg"><label>หมายเหตุ</label><input type="text" class="fc" id="rec-note" placeholder="อ้างอิง Invoice, เลขสลิป..."></div>
+    </div>
+    <div class="modal-foot"><button class="btn btn-ghost" onclick="closeM('recModal')">ยกเลิก</button><button class="btn btn-primary" onclick="saveRec()">✅ ออกใบเสร็จ</button></div>
+  </div>
+</div>
+
+<!-- SLIP MODAL -->
+<div class="overlay" id="slipModal">
+  <div class="modal" style="width:520px">
+    <div class="modal-head"><div class="modal-title">บันทึก Slip การโอน</div><button class="modal-close" onclick="closeM('slipModal')">✕</button></div>
+    <div class="modal-body">
+      <div class="frow frow-2">
+        <div class="fg"><label>วันที่โอน</label><input type="date" class="fc" id="sl-date"></div>
+        <div class="fg"><label>จำนวนเงิน (บาท)</label><input type="number" class="fc fc-mono" id="sl-amount" placeholder="0.00"></div>
+      </div>
+      <div class="fg"><label>ชื่อผู้โอน</label><input type="text" class="fc" id="sl-from" placeholder="ชื่อ-นามสกุล"></div>
+      <div class="fg"><label>รายการ / วัตถุประสงค์</label><input type="text" class="fc" id="sl-desc" placeholder="ค่าสมาชิก, ค่าลงทะเบียน..."></div>
+      <div class="frow frow-2">
+        <div class="fg"><label>เลขอ้างอิงธุรกรรม</label><input type="text" class="fc fc-mono" id="sl-ref" placeholder="Transaction ID"></div>
+        <div class="fg"><label>ธนาคาร</label>
+          <select class="fc" id="sl-bank">
+            <option>กสิกรไทย (KBANK)</option><option>ไทยพาณิชย์ (SCB)</option><option>กรุงเทพ (BBL)</option>
+            <option>กรุงไทย (KTB)</option><option>ออมสิน (GSB)</option><option>พร้อมเพย์ (PromptPay)</option><option>อื่นๆ</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot"><button class="btn btn-ghost" onclick="closeM('slipModal')">ยกเลิก</button><button class="btn btn-primary" onclick="saveSlip()">💾 บันทึก</button></div>
+  </div>
+</div>
+
+<!-- DOC VIEW MODAL -->
+<div class="overlay" id="docViewModal">
+  <div class="modal" style="width:720px;padding:0;overflow:hidden">
+    <div id="docViewContent"></div>
+    <div style="padding:12px 20px;display:flex;gap:8px;justify-content:flex-end;background:var(--gray-50);border-top:1px solid var(--gray-100)">
+      <button class="btn btn-ghost btn-sm" onclick="closeM('docViewModal')">ปิด</button>
+      <button class="btn btn-outline btn-sm" onclick="printDoc()">🖨️ พิมพ์</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════
+//  DATA
+// ═══════════════════════════════════════
+let DB = {
+  tx:   JSON.parse(localStorage.getItem('tcda2_tx')   || '[]'),
+  inv:  JSON.parse(localStorage.getItem('tcda2_inv')  || '[]'),
+  tax:  JSON.parse(localStorage.getItem('tcda2_tax')  || '[]'),
+  rec:  JSON.parse(localStorage.getItem('tcda2_rec')  || '[]'),
+  slip: JSON.parse(localStorage.getItem('tcda2_slip') || '[]'),
+  cfg:  JSON.parse(localStorage.getItem('tcda2_cfg')  || '{"sellerTaxId":"","gsTxUrl":"","gsSlipUrl":""}'),
+};
+function save(){ for(const k in DB) localStorage.setItem('tcda2_'+k, JSON.stringify(DB[k])); }
+
+const incomeCats = ['ค่าสมาชิก','ค่าลงทะเบียนอบรม','ค่าลงทะเบียนประชุม','เงินบริจาค','ค่าสนับสนุนกิจกรรม','รายได้อื่นๆ'];
+const expenseCats= ['ค่าเช่าสถานที่','ค่าวิทยากร','ค่าเอกสารและสื่อ','ค่าอาหาร','ค่าเดินทาง','ค่าสาธารณูปโภค','ค่าประชาสัมพันธ์','ค่าบริหารสมาคม','ค่าใช้จ่ายอื่นๆ'];
+
+const fmt = n => '฿'+parseFloat(n||0).toLocaleString('th-TH',{minimumFractionDigits:2,maximumFractionDigits:2});
+const today = () => new Date().toISOString().split('T')[0];
+const uid = () => Date.now()+Math.random().toString(36).slice(2,6);
+const seq = (arr,prefix) => prefix+'-'+new Date().getFullYear()+'-'+String(arr.length+1).padStart(4,'0');
+
+// ═══════════════════════════════════════
+//  NAVIGATION
+// ═══════════════════════════════════════
+const pageTitles = {dashboard:'แดชบอร์ด',transactions:'รายรับ-รายจ่าย',invoices:'Invoice / ใบแจ้งหนี้',taxinvoice:'ใบกำกับภาษี',receipts:'ใบเสร็จรับเงิน',slips:'Slip การโอน',gsheet:'Google Sheets Sync',report:'รายงานสรุป'};
+const addBtnLabels = {transactions:'+ เพิ่มรายการ',invoices:'+ Invoice',taxinvoice:'+ ใบกำกับภาษี',receipts:'+ ใบเสร็จ',slips:'+ Slip'};
+const addBtnFns = {transactions:'openTxModal()',invoices:'openInvWizard()',taxinvoice:'openTaxWizard()',receipts:'openRecWizard()',slips:"openSlipModal()"};
+let curPage = 'dashboard';
+
+function nav(id, btn){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  if(btn) btn.classList.add('active');
+  document.getElementById('topbarTitle').textContent = pageTitles[id]||id;
+  const ab = document.getElementById('topAddBtn');
+  if(addBtnLabels[id]){ ab.textContent=addBtnLabels[id]; ab.setAttribute('onclick', addBtnFns[id]); ab.style.display=''; }
+  else ab.style.display='none';
+  curPage = id;
+  const renders = {dashboard:renderDash,transactions:renderTx,invoices:renderInv,taxinvoice:renderTax,receipts:renderRec,slips:renderSlips,report:renderReport};
+  if(renders[id]) renders[id]();
+}
+
+// ═══════════════════════════════════════
+//  MODAL HELPERS
+// ═══════════════════════════════════════
+function closeM(id){ document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.overlay').forEach(o=>o.addEventListener('click',e=>{ if(e.target===o) o.classList.remove('open'); }));
+function toast(msg,type='ok'){
+  const t=document.createElement('div'); t.className='toast toast-'+type; t.textContent=msg;
+  document.body.appendChild(t); setTimeout(()=>t.remove(),3500);
+}
+
+// ═══════════════════════════════════════
+//  DASHBOARD
+// ═══════════════════════════════════════
+function renderDash(){
+  const inc = DB.tx.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0);
+  const exp = DB.tx.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0);
+  const pend = DB.inv.filter(i=>i.status==='pending').reduce((s,i)=>s+i.amount,0);
+  document.getElementById('statGrid').innerHTML = `
+    <div class="stat-card stat-income"><div class="stat-label">รายรับรวม</div><div class="stat-val">${fmt(inc)}</div><div class="stat-sub">${DB.tx.filter(t=>t.type==='income').length} รายการ</div></div>
+    <div class="stat-card stat-expense"><div class="stat-label">รายจ่ายรวม</div><div class="stat-val">${fmt(exp)}</div><div class="stat-sub">${DB.tx.filter(t=>t.type==='expense').length} รายการ</div></div>
+    <div class="stat-card stat-balance"><div class="stat-label">คงเหลือสุทธิ</div><div class="stat-val">${fmt(inc-exp)}</div><div class="stat-sub">ยอดปัจจุบัน</div></div>
+    <div class="stat-card stat-pending"><div class="stat-label">รอรับชำระ</div><div class="stat-val">${fmt(pend)}</div><div class="stat-sub">${DB.inv.filter(i=>i.status==='pending').length} ใบ</div></div>
+  `;
+  document.getElementById('recentRows').innerHTML = DB.tx.slice(0,8).map(t=>`
+    <tr>
+      <td>${t.date}</td><td><b>${t.desc}</b></td>
+      <td><span class="badge ${t.type==='income'?'b-income':'b-expense'}">${t.type==='income'?'รายรับ':'รายจ่าย'}</span></td>
+      <td style="color:var(--gray-400);font-size:12px">${t.cat}</td>
+      <td class="mono ${t.type==='income'?'c-green':'c-red'}">${t.type==='income'?'+':'-'}${fmt(t.amount)}</td>
+    </tr>`).join('') || '<tr><td colspan="5" style="text-align:center;color:var(--gray-400);padding:32px">ยังไม่มีรายการ</td></tr>';
+}
+
+// ═══════════════════════════════════════
+//  TRANSACTIONS
+// ═══════════════════════════════════════
+function updateTxCats(){
+  const t=document.getElementById('f-type').value;
+  document.getElementById('f-cat').innerHTML=(t==='income'?incomeCats:expenseCats).map(c=>`<option>${c}</option>`).join('');
+}
+function openTxModal(){ document.getElementById('f-date').value=today(); updateTxCats(); document.getElementById('txModal').classList.add('open'); }
+function saveTx(){
+  const t={id:uid(),date:document.getElementById('f-date').value,type:document.getElementById('f-type').value,desc:document.getElementById('f-desc').value,cat:document.getElementById('f-cat').value,amount:parseFloat(document.getElementById('f-amount').value)||0,ref:document.getElementById('f-ref').value};
+  if(!t.desc||!t.amount){ toast('กรุณากรอกข้อมูลให้ครบ','err'); return; }
+  DB.tx.unshift(t); save(); closeM('txModal');
+  ['f-desc','f-amount','f-ref'].forEach(id=>document.getElementById(id).value='');
+  toast('บันทึกรายการเรียบร้อย'); renderTx(); renderDash();
+}
+function renderTx(){
+  const q=(document.getElementById('txQ')?.value||'').toLowerCase();
+  const tf=document.getElementById('txType')?.value||'';
+  const cf=document.getElementById('txCat')?.value||'';
+  const allCats=[...new Set(DB.tx.map(t=>t.cat))];
+  const sel=document.getElementById('txCat');
+  if(sel) sel.innerHTML='<option value="">ทุกหมวด</option>'+allCats.map(c=>`<option ${c===cf?'selected':''}>${c}</option>`).join('');
+  const list=DB.tx.filter(t=>(!q||(t.desc+t.ref+t.cat).toLowerCase().includes(q))&&(!tf||t.type===tf)&&(!cf||t.cat===cf));
+  document.getElementById('txRows').innerHTML=list.map(t=>`
+    <tr>
+      <td>${t.date}</td><td><b>${t.desc}</b></td>
+      <td style="font-size:12px;color:var(--gray-400)">${t.cat}</td>
+      <td><span class="badge ${t.type==='income'?'b-income':'b-expense'}">${t.type==='income'?'รายรับ':'รายจ่าย'}</span></td>
+      <td style="font-size:12px;color:var(--gray-400)">${t.ref||'-'}</td>
+      <td class="mono ${t.type==='income'?'c-green':'c-red'}">${t.type==='income'?'+':'-'}${fmt(t.amount)}</td>
+      <td><button class="btn btn-ghost btn-xs" style="color:var(--red)" onclick="delTx('${t.id}')">✕</button></td>
+    </tr>`).join('') || '<tr><td colspan="7" style="text-align:center;color:var(--gray-400);padding:32px">ไม่พบรายการ</td></tr>';
+}
+function delTx(id){ if(!confirm('ลบรายการนี้?')) return; DB.tx=DB.tx.filter(t=>t.id!==id); save(); renderTx(); renderDash(); toast('ลบเรียบร้อย'); }
+function exportTxCSV(){
+  if(!DB.tx.length){ toast('ไม่มีข้อมูล','err'); return; }
+  const h='วันที่,ประเภท,รายการ,หมวด,จำนวนเงิน,อ้างอิง';
+  const r=DB.tx.map(t=>[t.date,t.type==='income'?'รายรับ':'รายจ่าย',t.desc,t.cat,t.amount,t.ref||''].map(v=>`"${v}"`).join(','));
+  dlCSV('\uFEFF'+h+'\n'+r.join('\n'),'TCDA_Transactions_'+today());
+}
+function importTxCSV(input){
+  readCSV(input,lines=>{
+    let n=0;
+    lines.slice(1).forEach((ln,i)=>{
+      if(!ln.trim()) return;
+      const c=parseCSV(ln); // date,type,desc,cat,amount,ref
+      const amt=parseFloat((c[4]||'0').replace(/,/g,''));
+      if(!c[0]||!c[2]||!amt) return;
+      DB.tx.unshift({id:uid(),date:c[0].trim(),type:(c[1]||'').includes('รายรับ')||c[1]==='income'?'income':'expense',desc:(c[2]||'').trim(),cat:(c[3]||'อื่นๆ').trim(),amount:amt,ref:(c[5]||'').trim()});
+      n++;
+    });
+    save(); renderTx(); renderDash(); toast(`นำเข้า ${n} รายการสำเร็จ`);
+  });
+}
+
+// ═══════════════════════════════════════
+//  INVOICES (Flow-style wizard)
+// ═══════════════════════════════════════
+let invStepIdx = 0;
+function openInvWizard(){
+  invStepIdx=0;
+  document.getElementById('inv-no').value=seq(DB.inv,'INV');
+  document.getElementById('inv-date').value=today();
+  const d=new Date(); d.setDate(d.getDate()+30);
+  document.getElementById('inv-due').value=d.toISOString().split('T')[0];
+  ['inv-to','inv-item','inv-note'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('inv-amount').value='';
+  setInvStep(0);
+  document.getElementById('invModal').classList.add('open');
+}
+function setInvStep(s){
+  invStepIdx=s;
+  [0,1,2].forEach(i=>{
+    const p=document.getElementById('inv-s'+i); if(p) p.style.display=i===s?'':'none';
+    const st=document.querySelector(`#invSteps [data-s="${i}"]`);
+    if(st){ st.className='step'; if(i<s) st.classList.add('done'); if(i===s) st.classList.add('active'); }
+  });
+  document.getElementById('invBack').style.visibility=s>0?'':'hidden';
+  document.getElementById('invNext').textContent=s<2?'ถัดไป →':'✅ บันทึก Invoice';
+  if(s===2){
+    document.getElementById('inv-preview-mini').innerHTML=`
+      <div style="margin-bottom:6px"><b>เลขที่:</b> ${document.getElementById('inv-no').value}</div>
+      <div style="margin-bottom:6px"><b>ผู้รับ:</b> ${document.getElementById('inv-to').value}</div>
+      <div style="margin-bottom:6px"><b>วันที่:</b> ${document.getElementById('inv-date').value} &nbsp;|&nbsp; <b>ครบกำหนด:</b> ${document.getElementById('inv-due').value}</div>
+      <div style="margin-bottom:6px"><b>รายการ:</b> ${document.getElementById('inv-item').value}</div>
+      <div style="font-size:20px;font-weight:700;color:var(--navy);font-family:'JetBrains Mono',monospace;margin-top:8px">ยอดรวม: ${fmt(document.getElementById('inv-amount').value)}</div>
+    `;
+  }
+}
+function invStep(dir){
+  if(dir===1 && invStepIdx===2){ saveInv(); return; }
+  setInvStep(invStepIdx+dir);
+}
+function saveInv(){
+  const inv={id:uid(),no:document.getElementById('inv-no').value,date:document.getElementById('inv-date').value,due:document.getElementById('inv-due').value,to:document.getElementById('inv-to').value,item:document.getElementById('inv-item').value,amount:parseFloat(document.getElementById('inv-amount').value)||0,status:document.getElementById('inv-status').value,note:document.getElementById('inv-note').value};
+  if(!inv.to||!inv.amount){ toast('กรุณากรอกข้อมูลให้ครบ','err'); return; }
+  DB.inv.unshift(inv); save(); closeM('invModal'); toast('สร้าง Invoice เรียบร้อย'); renderInv(); renderDash();
+}
+function renderInv(){
+  const q=(document.getElementById('invQ')?.value||'').toLowerCase();
+  const sf=document.getElementById('invStatus')?.value||'';
+  const list=DB.inv.filter(i=>(!q||(i.to+i.no+i.item).toLowerCase().includes(q))&&(!sf||i.status===sf));
+  document.getElementById('invRows').innerHTML=list.map(i=>`
+    <tr>
+      <td class="mono" style="font-size:11.5px">${i.no}</td><td>${i.date}</td><td><b>${i.to}</b></td><td>${i.item}</td>
+      <td><span class="badge ${i.status==='paid'?'b-paid':i.status==='pending'?'b-pending':'b-draft'}">${i.status==='paid'?'ชำระแล้ว':i.status==='pending'?'รอชำระ':'ร่าง'}</span></td>
+      <td class="mono c-green">${fmt(i.amount)}</td>
+      <td style="display:flex;gap:4px">
+        <button class="btn btn-ghost btn-xs" onclick="viewInv('${i.id}')">👁️</button>
+        ${i.status!=='paid'?`<button class="btn btn-success btn-xs" onclick="markInvPaid('${i.id}')">✓ ชำระ</button>`:''}
+        <button class="btn btn-ghost btn-xs" style="color:var(--red)" onclick="delInv('${i.id}')">✕</button>
+      </td>
+    </tr>`).join('') || '<tr><td colspan="7" style="text-align:center;color:var(--gray-400);padding:32px">ไม่พบรายการ</td></tr>';
+}
+function markInvPaid(id){ const i=DB.inv.find(x=>x.id===id); if(i){i.status='paid'; save(); renderInv(); renderDash(); toast('อัปเดตสถานะชำระแล้ว');} }
+function delInv(id){ if(!confirm('ลบ?')) return; DB.inv=DB.inv.filter(i=>i.id!==id); save(); renderInv(); renderDash(); }
+function exportInvCSV(){
+  const h='เลขที่,วันที่,ผู้รับ,รายการ,สถานะ,จำนวนเงิน';
+  const r=DB.inv.map(i=>[i.no,i.date,i.to,i.item,i.status,i.amount].map(v=>`"${v}"`).join(','));
+  dlCSV('\uFEFF'+h+'\n'+r.join('\n'),'TCDA_Invoices_'+today());
+}
+function viewInv(id){
+  const i=DB.inv.find(x=>x.id===id); if(!i) return;
+  const isPaid=i.status==='paid';
+  document.getElementById('docViewContent').innerHTML=buildInvHTML(i,'INVOICE','ใบแจ้งหนี้',isPaid);
+  document.getElementById('docViewModal').classList.add('open');
+}
+function buildInvHTML(doc,typeEn,typeTh,paid){
+  return `<div class="inv-preview">
+    <div class="inv-header">
+      <div><div class="inv-org-name">สมาคมผู้อำนวยเพลงขับประสานเสียง (ประเทศไทย)</div>
+      <div class="inv-org-detail">Thailand Choral Directors Association<br>โทร/อีเมล สมาคมฯ</div></div>
+      <div class="inv-doc-type">
+        <div class="inv-doc-label">${typeEn}</div>
+        <div class="inv-doc-label-th">${typeTh}</div>
+        <div class="inv-doc-no">${doc.no||doc.id}</div>
+        ${paid?'<div style="margin-top:8px"><span style="background:var(--green);color:white;font-size:11px;font-weight:700;padding:3px 12px;border-radius:4px">PAID ✓</span></div>':''}
+      </div>
+    </div>
+    <div class="inv-body">
+      <div class="inv-meta">
+        <div class="inv-meta-box"><div class="inv-meta-label">เรียน</div><div class="inv-meta-val">${doc.to||doc.from}</div></div>
+        <div class="inv-meta-box"><div class="inv-meta-label">วันที่</div><div class="inv-meta-val">${doc.date}</div>${doc.due?`<div class="inv-meta-val-sm" style="margin-top:4px">ครบกำหนด: <b style="color:var(--red)">${doc.due}</b></div>`:''}</div>
+      </div>
+      <div class="inv-items">
+        <table><thead><tr><th>#</th><th>รายการ</th><th class="mono" style="text-align:right">จำนวนเงิน</th></tr></thead>
+        <tbody><tr><td>1</td><td>${doc.item||doc.desc}</td><td class="mono" style="text-align:right">${fmt(doc.amount)}</td></tr></tbody></table>
+      </div>
+      <div class="inv-totals"><div class="inv-totals-box">
+        <div class="inv-tot-row total-final"><span>ยอดรวมทั้งสิ้น</span><span class="amt">${fmt(doc.amount)}</span></div>
+      </div></div>
+      ${doc.note?`<div class="inv-note-box">หมายเหตุ: ${doc.note}</div>`:''}
+      <div class="inv-footer">
+        <div class="inv-sig-box"><div class="inv-sig-line"></div><div class="inv-sig-label">ผู้รับเงิน / Authorized Signature</div></div>
+        <div class="inv-sig-box" style="text-align:center;padding-top:12px">${paid?'<div class="inv-stamp">ชำระแล้ว</div>':''}</div>
+        <div class="inv-sig-box"><div class="inv-sig-line"></div><div class="inv-sig-label">ผู้จ่ายเงิน / Payer</div></div>
+      </div>
+    </div>
+    <div style="background:var(--gray-100);padding:10px 32px;font-size:10.5px;color:var(--gray-400);display:flex;justify-content:space-between">
+      <span>สมาคมผู้อำนวยเพลงขับประสานเสียง (ประเทศไทย)</span><span>ออกโดยระบบ TCDA Finance v2</span>
+    </div>
+  </div>`;
+}
+
+// ═══════════════════════════════════════
+//  TAX INVOICE
+// ═══════════════════════════════════════
+function calcVat(){
+  const b=parseFloat(document.getElementById('tax-before').value)||0;
+  const vat=b*0.07;
+  document.getElementById('tax-vat').value=fmt(vat).replace('฿','');
+  document.getElementById('tax-total').value=fmt(b+vat).replace('฿','');
+}
+function openTaxWizard(){
+  document.getElementById('tax-no').value=seq(DB.tax,'TAX');
+  document.getElementById('tax-date').value=today();
+  const sid=document.getElementById('tax-seller-id');
+  if(DB.cfg.sellerTaxId) sid.value=DB.cfg.sellerTaxId;
+  ['tax-buyer','tax-buyer-id','tax-buyer-addr','tax-item','tax-before','tax-vat','tax-total'].forEach(id=>{const el=document.getElementById(id); if(el&&!el.readOnly) el.value='';});
+  document.getElementById('taxModal').classList.add('open');
+}
+function saveTaxDoc(status){
+  const before=parseFloat(document.getElementById('tax-before').value)||0;
+  const vat=parseFloat((document.getElementById('tax-vat').value||'0').replace(/,/g,''))||before*0.07;
+  const doc={id:uid(),no:document.getElementById('tax-no').value,date:document.getElementById('tax-date').value,sellerTaxId:document.getElementById('tax-seller-id').value,docType:document.getElementById('tax-doc-type').value,buyer:document.getElementById('tax-buyer').value,buyerId:document.getElementById('tax-buyer-id').value,buyerAddr:document.getElementById('tax-buyer-addr').value,item:document.getElementById('tax-item').value,before,vat,total:before+vat,status};
+  if(!doc.buyer||!doc.before){ toast('กรุณากรอกข้อมูลให้ครบ','err'); return; }
+  if(document.getElementById('tax-seller-id').value) DB.cfg.sellerTaxId=document.getElementById('tax-seller-id').value;
+  DB.tax.unshift(doc); save(); closeM('taxModal'); toast('ออกใบกำกับภาษีเรียบร้อย'); renderTax();
+}
+function renderTax(){
+  const q=(document.getElementById('taxQ')?.value||'').toLowerCase();
+  const sf=document.getElementById('taxStatus')?.value||'';
+  const list=DB.tax.filter(t=>(!q||(t.buyer+t.no).toLowerCase().includes(q))&&(!sf||t.status===sf));
+  document.getElementById('taxRows').innerHTML=list.map(t=>`
+    <tr>
+      <td class="mono" style="font-size:11.5px">${t.no}</td><td>${t.date}</td><td><b>${t.buyer}</b></td>
+      <td class="mono" style="font-size:11.5px">${t.buyerId||'-'}</td>
+      <td><span class="badge ${t.status==='issued'?'b-tax':'b-draft'}">${t.status==='issued'?'ออกแล้ว':'ร่าง'}</span></td>
+      <td class="mono">${fmt(t.before)}</td><td class="mono c-gold">${fmt(t.vat)}</td><td class="mono" style="font-weight:700">${fmt(t.total)}</td>
+      <td style="display:flex;gap:4px">
+        <button class="btn btn-ghost btn-xs" onclick="viewTax('${t.id}')">👁️</button>
+        <button class="btn btn-ghost btn-xs" style="color:var(--red)" onclick="delTax('${t.id}')">✕</button>
+      </td>
+    </tr>`).join('') || '<tr><td colspan="9" style="text-align:center;color:var(--gray-400);padding:32px">ไม่พบรายการ</td></tr>';
+}
+function delTax(id){ if(!confirm('ลบ?')) return; DB.tax=DB.tax.filter(t=>t.id!==id); save(); renderTax(); }
+function exportTaxCSV(){
+  const h='เลขที่,วันที่,ผู้ซื้อ,เลขผู้เสียภาษี,รายการ,ก่อน VAT,VAT 7%,รวม,สถานะ';
+  const r=DB.tax.map(t=>[t.no,t.date,t.buyer,t.buyerId||'',t.item,t.before,t.vat,t.total,t.status].map(v=>`"${v}"`).join(','));
+  dlCSV('\uFEFF'+h+'\n'+r.join('\n'),'TCDA_TaxInvoice_'+today());
+}
+function viewTax(id){
+  const t=DB.tax.find(x=>x.id===id); if(!t) return;
+  document.getElementById('docViewContent').innerHTML=buildTaxHTML(t);
+  document.getElementById('docViewModal').classList.add('open');
+}
+function buildTaxHTML(t){
+  const isShort=t.docType==='short';
+  return `<div class="inv-preview">
+    <div class="inv-header">
+      <div>
+        <div class="inv-org-name">สมาคมผู้อำนวยเพลงขับประสานเสียง (ประเทศไทย)</div>
+        <div class="inv-org-detail">Thailand Choral Directors Association<br>เลขประจำตัวผู้เสียภาษี: ${t.sellerTaxId||'- กรุณาระบุ -'}</div>
+      </div>
+      <div class="inv-doc-type">
+        <div class="inv-doc-label">${isShort?'TAX INVOICE (ABB.)':'TAX INVOICE'}</div>
+        <div class="inv-doc-label-th">${isShort?'ใบกำกับภาษีอย่างย่อ':'ใบกำกับภาษีเต็มรูปแบบ'}</div>
+        <div class="inv-doc-no">${t.no}</div>
+      </div>
+    </div>
+    <div class="inv-body">
+      <div class="inv-meta">
+        <div class="inv-meta-box">
+          <div class="inv-meta-label">ผู้ซื้อ / Buyer</div>
+          <div class="inv-meta-val">${t.buyer}</div>
+          <div class="inv-meta-val-sm" style="margin-top:4px">เลขผู้เสียภาษี: ${t.buyerId||'-'}</div>
+          <div class="inv-meta-val-sm">ที่อยู่: ${t.buyerAddr||'-'}</div>
+        </div>
+        <div class="inv-meta-box"><div class="inv-meta-label">วันที่ออก</div><div class="inv-meta-val">${t.date}</div></div>
+      </div>
+      <div class="inv-items">
+        <table><thead><tr><th>#</th><th>รายการ / Description</th><th class="mono" style="text-align:right">จำนวนเงิน</th></tr></thead>
+        <tbody><tr><td>1</td><td>${t.item}</td><td class="mono" style="text-align:right">${fmt(t.before)}</td></tr></tbody></table>
+      </div>
+      <div class="inv-totals"><div class="inv-totals-box">
+        <div class="inv-tot-row"><span>ราคาก่อนภาษีมูลค่าเพิ่ม</span><span class="amt">${fmt(t.before)}</span></div>
+        <div class="inv-tot-row" style="color:var(--gold)"><span>ภาษีมูลค่าเพิ่ม 7%</span><span class="amt">${fmt(t.vat)}</span></div>
+        <div class="inv-tot-row total-final"><span>ยอดรวมทั้งสิ้น</span><span class="amt">${fmt(t.total)}</span></div>
+      </div></div>
+      ${!isShort?`<div class="inv-footer">
+        <div class="inv-sig-box"><div class="inv-sig-line"></div><div class="inv-sig-label">ผู้รับเงิน / Authorized</div></div>
+        <div></div>
+        <div class="inv-sig-box"><div class="inv-sig-line"></div><div class="inv-sig-label">ผู้จ่ายเงิน / Payer</div></div>
+      </div>`:''}
+    </div>
+    <div style="background:var(--gray-100);padding:10px 32px;font-size:10.5px;color:var(--gray-400);display:flex;justify-content:space-between">
+      <span>เอกสารนี้ออกโดยระบบ TCDA Finance</span><span>VAT Reg. ${t.sellerTaxId||'-'}</span>
+    </div>
+  </div>`;
+}
+
+// ═══════════════════════════════════════
+//  RECEIPTS
+// ═══════════════════════════════════════
+function openRecWizard(){ document.getElementById('rec-no').value=seq(DB.rec,'REC'); document.getElementById('rec-date').value=today(); document.getElementById('recModal').classList.add('open'); }
+function saveRec(){
+  const r={id:uid(),no:document.getElementById('rec-no').value,date:document.getElementById('rec-date').value,from:document.getElementById('rec-from').value,item:document.getElementById('rec-item').value,amount:parseFloat(document.getElementById('rec-amount').value)||0,method:document.getElementById('rec-method').value,note:document.getElementById('rec-note').value};
+  if(!r.from||!r.amount){ toast('กรุณากรอกข้อมูลให้ครบ','err'); return; }
+  DB.rec.unshift(r); save(); closeM('recModal'); toast('ออกใบเสร็จเรียบร้อย'); renderRec();
+}
+function renderRec(){
+  const q=(document.getElementById('recQ')?.value||'').toLowerCase();
+  const list=DB.rec.filter(r=>!q||(r.from+r.no+r.item).toLowerCase().includes(q));
+  document.getElementById('recRows').innerHTML=list.map(r=>`
+    <tr>
+      <td class="mono" style="font-size:11.5px">${r.no}</td><td>${r.date}</td><td><b>${r.from}</b></td><td>${r.item}</td>
+      <td class="mono c-green">${fmt(r.amount)}</td>
+      <td style="display:flex;gap:4px">
+        <button class="btn btn-ghost btn-xs" onclick="viewRec('${r.id}')">👁️</button>
+        <button class="btn btn-ghost btn-xs" style="color:var(--red)" onclick="delRec('${r.id}')">✕</button>
+      </td>
+    </tr>`).join('') || '<tr><td colspan="6" style="text-align:center;color:var(--gray-400);padding:32px">ไม่พบรายการ</td></tr>';
+}
+function delRec(id){ if(!confirm('ลบ?')) return; DB.rec=DB.rec.filter(r=>r.id!==id); save(); renderRec(); }
+function viewRec(id){
+  const r=DB.rec.find(x=>x.id===id); if(!r) return;
+  document.getElementById('docViewContent').innerHTML=buildInvHTML({...r,to:r.from,due:null,note:r.note},'RECEIPT','ใบเสร็จรับเงิน',true);
+  document.getElementById('docViewModal').classList.add('open');
+}
+
+// ═══════════════════════════════════════
+//  SLIPS
+// ═══════════════════════════════════════
+function openSlipModal(){ document.getElementById('sl-date').value=today(); document.getElementById('slipModal').classList.add('open'); }
+function saveSlip(){
+  const s={id:uid(),no:seq(DB.slip,'SLP'),date:document.getElementById('sl-date').value,from:document.getElementById('sl-from').value,desc:document.getElementById('sl-desc').value,ref:document.getElementById('sl-ref').value,bank:document.getElementById('sl-bank').value,amount:parseFloat(document.getElementById('sl-amount').value)||0};
+  if(!s.from||!s.amount){ toast('กรุณากรอกข้อมูลให้ครบ','err'); return; }
+  DB.slip.unshift(s); save(); closeM('slipModal'); toast('บันทึก Slip เรียบร้อย'); renderSlips();
+}
+function renderSlips(){
+  const q=(document.getElementById('slipQ')?.value||'').toLowerCase();
+  const list=DB.slip.filter(s=>!q||(s.from+s.desc+s.ref).toLowerCase().includes(q));
+  const lbl=document.getElementById('slipCountLbl');
+  if(lbl) lbl.textContent=`${list.length} รายการ (ทั้งหมด ${DB.slip.length})`;
+  document.getElementById('slipGrid').innerHTML=list.map(s=>`
+    <div class="slip-card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <span class="slip-no">${s.no}</span>
+        <button class="btn btn-ghost btn-xs" style="color:var(--red)" onclick="delSlip('${s.id}')">✕</button>
+      </div>
+      <div class="slip-amt">${fmt(s.amount)}</div>
+      <div class="slip-from">${s.from}</div>
+      <div class="slip-meta">${s.date} · ${s.bank}</div>
+      ${s.desc?`<div class="slip-meta" style="margin-top:4px">${s.desc}</div>`:''}
+      ${s.ref?`<div class="slip-meta mono" style="margin-top:3px;font-size:10.5px">Ref: ${s.ref}</div>`:''}
+    </div>`).join('') || '<div style="grid-column:1/-1;text-align:center;color:var(--gray-400);padding:48px">ยังไม่มี Slip</div>';
+}
+function delSlip(id){ if(!confirm('ลบ?')) return; DB.slip=DB.slip.filter(s=>s.id!==id); save(); renderSlips(); }
+function dlSlipTemplate(){
+  const c='\uFEFFวันที่ (YYYY-MM-DD),ชื่อผู้โอน,จำนวนเงิน,รายการ,เลขอ้างอิง,ธนาคาร\n2025-03-01,นายสมชาย ดนตรี,1500,ค่าสมาชิก 2568,2503010001,กสิกรไทย (KBANK)\n2025-03-02,ดร.วิชัย เพลง,3000,ค่าลงทะเบียน,,ไทยพาณิชย์ (SCB)';
+  dlCSV(c,'TCDA_Slip_Template');
+}
+function importSlips(input){
+  readCSV(input,lines=>{
+    let n=0;
+    lines.slice(1).forEach(ln=>{
+      if(!ln.trim()) return;
+      const c=parseCSV(ln);
+      const amt=parseFloat((c[2]||'0').replace(/,/g,''));
+      if(!c[0]||!c[1]||!amt) return;
+      DB.slip.unshift({id:uid(),no:seq(DB.slip,'SLP'),date:c[0].trim(),from:c[1].trim(),amount:amt,desc:(c[3]||'').trim(),ref:(c[4]||'').trim(),bank:(c[5]||'อื่นๆ').trim()});
+      n++;
+    });
+    save(); renderSlips(); toast(`นำเข้า Slip ${n} รายการสำเร็จ`);
+  });
+}
+function exportSlips(){
+  if(!DB.slip.length){ toast('ไม่มีข้อมูล','err'); return; }
+  const h='เลขที่,วันที่,ชื่อผู้โอน,จำนวนเงิน,รายการ,เลขอ้างอิง,ธนาคาร';
+  const r=DB.slip.map(s=>[s.no,s.date,s.from,s.amount,s.desc,s.ref||'',s.bank].map(v=>`"${v}"`).join(','));
+  dlCSV('\uFEFF'+h+'\n'+r.join('\n'),'TCDA_Slips_'+today());
+}
+
+// ═══════════════════════════════════════
+//  GOOGLE SHEETS IMPORT
+// ═══════════════════════════════════════
+async function importFromGSheet(type){
+  const urlId=type==='tx'?'gsTxUrl':'gsSlipUrl';
+  const url=document.getElementById(urlId).value.trim();
+  if(!url){ toast('กรุณาใส่ URL ของ Google Sheet','err'); return; }
+  toast('กำลังโหลดข้อมูลจาก Google Sheets...');
+  try{
+    // We fetch via a CORS proxy approach - for GitHub Pages use Apps Script instead
+    const r=await fetch(url);
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    const text=await r.text();
+    const lines=text.trim().split('\n');
+    if(type==='tx'){
+      let n=0;
+      lines.slice(1).forEach(ln=>{
+        if(!ln.trim()) return;
+        const c=parseCSV(ln);
+        const amt=parseFloat((c[4]||'0').replace(/,/g,''));
+        if(!c[0]||!c[2]||!amt) return;
+        DB.tx.unshift({id:uid(),date:c[0].trim(),type:(c[1]||'').includes('รายรับ')||c[1]==='income'?'income':'expense',desc:(c[2]||'').trim(),cat:(c[3]||'อื่นๆ').trim(),amount:amt,ref:(c[5]||'').trim()});
+        n++;
+      });
+      save(); renderTx(); renderDash(); toast(`✅ Import รายรับ-รายจ่าย ${n} รายการจาก Google Sheets`);
+    } else {
+      let n=0;
+      lines.slice(1).forEach(ln=>{
+        if(!ln.trim()) return;
+        const c=parseCSV(ln);
+        const amt=parseFloat((c[2]||'0').replace(/,/g,''));
+        if(!c[0]||!c[1]||!amt) return;
+        DB.slip.unshift({id:uid(),no:seq(DB.slip,'SLP'),date:c[0].trim(),from:c[1].trim(),amount:amt,desc:(c[3]||'').trim(),ref:(c[4]||'').trim(),bank:(c[5]||'อื่นๆ').trim()});
+        n++;
+      });
+      save(); renderSlips(); toast(`✅ Import Slips ${n} รายการจาก Google Sheets`);
+    }
+    document.getElementById('gsBadge').textContent='เชื่อมแล้ว'; document.getElementById('gsBadge').className='gsheet-status gs-connected';
+    document.getElementById('gsStatusText').textContent='เชื่อมต่อสำเร็จ — ข้อมูลอัปเดตแล้ว';
+    if(DB.cfg) { DB.cfg[urlId]=url; save(); }
+  } catch(e){
+    toast('ไม่สามารถโหลดได้: '+e.message+' — ตรวจสอบว่า Sheet ถูก Publish to Web แล้ว','err');
+  }
+}
+
+// ═══════════════════════════════════════
+//  REPORT
+// ═══════════════════════════════════════
+function renderReport(){
+  const inc=DB.tx.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0);
+  const exp=DB.tx.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0);
+  document.getElementById('rStatGrid').innerHTML=`
+    <div class="stat-card stat-income"><div class="stat-label">รายรับสะสม</div><div class="stat-val">${fmt(inc)}</div></div>
+    <div class="stat-card stat-expense"><div class="stat-label">รายจ่ายสะสม</div><div class="stat-val">${fmt(exp)}</div></div>
+    <div class="stat-card stat-balance"><div class="stat-label">คงเหลือ</div><div class="stat-val">${fmt(inc-exp)}</div></div>`;
+  const incMap={},expMap={};
+  DB.tx.forEach(t=>{ const m=t.type==='income'?incMap:expMap; m[t.cat]=(m[t.cat]||0)+t.amount; });
+  const maxInc=Math.max(...Object.values(incMap),1);
+  const maxExp=Math.max(...Object.values(expMap),1);
+  document.getElementById('incomeChart').innerHTML=Object.entries(incMap).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<div class="bar-row"><span class="bar-label">${k}</span><div class="bar-track"><div class="bar-fill bar-income-fill" style="width:${v/maxInc*100}%"></div></div><span class="bar-amt c-green">${fmt(v)}</span></div>`).join('')||'<div style="color:var(--gray-400);font-size:13px;padding:8px">ไม่มีข้อมูล</div>';
+  document.getElementById('expenseChart').innerHTML=Object.entries(expMap).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<div class="bar-row"><span class="bar-label">${k}</span><div class="bar-track"><div class="bar-fill bar-expense-fill" style="width:${v/maxExp*100}%"></div></div><span class="bar-amt c-red">${fmt(v)}</span></div>`).join('')||'<div style="color:var(--gray-400);font-size:13px;padding:8px">ไม่มีข้อมูล</div>';
+  const catMap={};
+  DB.tx.forEach(t=>{ const k=t.cat+'_'+t.type; if(!catMap[k]) catMap[k]={cat:t.cat,type:t.type,count:0,total:0}; catMap[k].count++; catMap[k].total+=t.amount; });
+  document.getElementById('reportRows').innerHTML=Object.values(catMap).sort((a,b)=>b.total-a.total).map(r=>`<tr><td>${r.cat}</td><td><span class="badge ${r.type==='income'?'b-income':'b-expense'}">${r.type==='income'?'รายรับ':'รายจ่าย'}</span></td><td>${r.count}</td><td class="mono ${r.type==='income'?'c-green':'c-red'}">${fmt(r.total)}</td></tr>`).join('')||'<tr><td colspan="4" style="text-align:center;color:var(--gray-400);padding:32px">ไม่มีข้อมูล</td></tr>';
+}
+
+// ═══════════════════════════════════════
+//  PRINT
+// ═══════════════════════════════════════
+function printDoc(){ window.print(); }
+
+// ═══════════════════════════════════════
+//  CSV UTILS
+// ═══════════════════════════════════════
+function dlCSV(csv,name){ const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'})); a.download=name+'.csv'; a.click(); }
+function parseCSV(line){ const r=[]; let c='',q=false; for(const ch of line){ if(ch==='"'){q=!q}else if(ch===','&&!q){r.push(c);c=''}else c+=ch; } r.push(c); return r.map(v=>v.trim().replace(/^"|"$/g,'')); }
+function readCSV(input,cb){ const f=input.files[0]; if(!f) return; const r=new FileReader(); r.onload=e=>cb(e.target.result.replace(/^\uFEFF/,'').split('\n')); r.readAsText(f,'UTF-8'); input.value=''; }
+
+// ═══════════════════════════════════════
+//  SEED + INIT
+// ═══════════════════════════════════════
+function seed(){
+  if(DB.tx.length) return;
+  DB.tx=[
+    {id:'s1',date:'2025-01-15',type:'income',desc:'ค่าสมาชิกประจำปี 2568',cat:'ค่าสมาชิก',amount:1500,ref:'TRF001'},
+    {id:'s2',date:'2025-01-20',type:'income',desc:'ค่าลงทะเบียนอบรม Choral Workshop',cat:'ค่าลงทะเบียนอบรม',amount:3000,ref:'TRF002'},
+    {id:'s3',date:'2025-02-01',type:'expense',desc:'ค่าเช่าห้องประชุมรายเดือน',cat:'ค่าเช่าสถานที่',amount:5000,ref:''},
+    {id:'s4',date:'2025-02-10',type:'income',desc:'เงินบริจาคสนับสนุนสมาคม',cat:'เงินบริจาค',amount:10000,ref:'DON001'},
+    {id:'s5',date:'2025-02-15',type:'expense',desc:'ค่าวิทยากรอบรมการบริหาร',cat:'ค่าวิทยากร',amount:8000,ref:''},
+  ];
+  DB.inv=[
+    {id:'i1',no:'INV-2025-0001',date:'2025-01-10',due:'2025-02-10',to:'นายสมชาย ดนตรี',item:'ค่าสมาชิกประจำปี 2568',amount:1500,status:'paid',note:''},
+    {id:'i2',no:'INV-2025-0002',date:'2025-02-01',due:'2025-03-01',to:'ดร.วิชัย เพลง',item:'ค่าลงทะเบียนอบรม Choral Conducting',amount:3000,status:'pending',note:'กรุณาโอนก่อนวันอบรม'},
+  ];
+  DB.slip=[{id:'sl1',no:'SLP-2025-0001',date:'2025-01-15',from:'นายสมชาย ดนตรี',desc:'ค่าสมาชิก 2568',ref:'2501150001',bank:'กสิกรไทย (KBANK)',amount:1500}];
+  save();
+}
+seed();
+renderDash();
+</script>
+</body>
+</html>
