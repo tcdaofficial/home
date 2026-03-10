@@ -628,14 +628,91 @@ function isLocalOnly(lsKey) {
 
 async function trySyncLocalToSupabase(table, lsKey, rows) {
   if (!sb || !Array.isArray(rows) || rows.length === 0) return false;
-  try {
-    const { error } = await sb.from(table).insert(rows);
-    if (error) {
-      console.warn(`sync ${table} failed:`, error.message || error);
-      return false;
+  const normalizeForSync = (raw, idx) => {
+    const nowIso = new Date().toISOString();
+    const toNumId = (v) => {
+      const n = Number(v);
+      return Number.isFinite(n) ? n : Date.now() + idx;
+    };
+
+    if (table === 'events') {
+      return {
+        id: toNumId(raw.id),
+        title_tb: (raw.title_tb || raw.title_th || raw.title || '').trim(),
+        title_en: raw.title_en || '',
+        date: raw.date || nowIso.slice(0, 10),
+        venue: raw.venue || '-',
+        desc_th: raw.desc_th || raw.description || '-',
+        desc_en: raw.desc_en || '',
+        photo: raw.photo || '',
+        created_at: raw.created_at || nowIso
+      };
     }
-    setLocalOnly(lsKey, false);
-    return true;
+
+    if (table === 'board') {
+      return {
+        id: toNumId(raw.id),
+        th: raw.th || raw.name_th || '-',
+        en: raw.en || raw.name_en || '',
+        role: raw.role || '-',
+        photo: raw.photo || '',
+        sort_order: raw.sort_order || 0,
+        created_at: raw.created_at || nowIso
+      };
+    }
+
+    if (table === 'news') {
+      return {
+        id: toNumId(raw.id),
+        title_th: raw.title_th || raw.title || '-',
+        title_en: raw.title_en || '',
+        content_th: raw.content_th || raw.body || '',
+        content_en: raw.content_en || '',
+        created_at: raw.created_at || nowIso
+      };
+    }
+
+    if (table === 'resources') {
+      return {
+        id: toNumId(raw.id),
+        title_th: raw.title_th || raw.title || '-',
+        title_en: raw.title_en || '',
+        url: raw.url || '',
+        type: raw.type || '',
+        created_at: raw.created_at || nowIso
+      };
+    }
+
+    if (table === 'members') {
+      return {
+        ...raw,
+        email: String(raw.email || '').trim().toLowerCase(),
+        created_at: raw.created_at || nowIso
+      };
+    }
+
+    return raw;
+  };
+
+  try {
+    let ok = 0;
+    for (let i = 0; i < rows.length; i++) {
+      const payload = normalizeForSync(rows[i], i);
+      const { error } = await sb.from(table).insert([payload]);
+      if (error) {
+        const msg = String(error.message || '');
+        // ถือว่า sync ได้แล้วถ้าซ้ำ (แปลว่ามีบน cloud อยู่แล้ว)
+        if (/duplicate key|already exists|conflict/i.test(msg)) {
+          ok++;
+          continue;
+        }
+        console.warn(`sync ${table} row failed:`, msg, payload);
+        continue;
+      }
+      ok++;
+    }
+    setLocalOnly(lsKey, ok < rows.length);
+    return ok > 0;
   } catch (e) {
     console.warn(`sync ${table} error:`, e);
     return false;
