@@ -342,7 +342,9 @@
           <div class="form-group"><label>Event Name (English)</label><input id="ev-title-en" placeholder="Event name"></div>
           <div class="form-group"><label>วันที่</label><input id="ev-date" type="date"></div>
           <div class="form-group"><label>สถานที่</label><input id="ev-venue" placeholder="สถานที่จัดงาน"></div>
+          <div class="form-group full"><label>ลิงก์สมัครกิจกรรม (Google Form / URL)</label><input id="ev-register-url" placeholder="https://..."></div>
           <div class="form-group full"><label>รายละเอียด (ไทย)</label><textarea id="ev-desc-th" rows="3" placeholder="รายละเอียดกิจกรรม"></textarea></div>
+          <div class="form-group full"><label>Details (English)</label><textarea id="ev-desc-en" rows="3" placeholder="Event details in English"></textarea></div>
           <div class="form-group full">
             <label>รูปภาพ <span style="color:var(--muted);font-weight:400">(อัพโหลดไป Supabase Storage)</span></label>
             <input type="file" id="ev-photo" accept="image/*" onchange="previewImage(this,'ev-preview')">
@@ -667,8 +669,8 @@ async function sbAdd(table, lsKey, row) {
 async function sbDelete(table, lsKey, id) {
   if (sb) {
     try {
-      const { error } = await sb.from(table).delete().eq('id', id);
-      if (!error) {
+      const { data, error } = await sb.from(table).delete().eq('id', id).select('id');
+      if (!error && Array.isArray(data) && data.length > 0) {
         setLocalOnly(lsKey, false);
         return;
       }
@@ -680,8 +682,8 @@ async function sbDelete(table, lsKey, id) {
 async function sbUpdate(table, lsKey, id, updates) {
   if (sb) {
     try {
-      const { error } = await sb.from(table).update(updates).eq('id', id);
-      if (!error) {
+      const { data, error } = await sb.from(table).update(updates).eq('id', id).select('id');
+      if (!error && Array.isArray(data) && data.length > 0) {
         setLocalOnly(lsKey, false);
         return;
       }
@@ -724,8 +726,22 @@ async function uploadLogo() {
 
 // ── ADMIN LOGIN ───────────────────────────────────────────────────────────────
 function adminLogin() {
-  const pw = document.getElementById('adminPassword').value;
-  const stored = localStorage.getItem('tcda_admin_pw') || 'admin123';
+  const pw = (document.getElementById('adminPassword') || {}).value || '';
+  const stored = localStorage.getItem('tcda_admin_pw') || '';
+  if (!stored) {
+    const firstPw = prompt('ตั้งรหัสผ่านผู้ดูแลระบบครั้งแรก (อย่างน้อย 8 ตัวอักษร)');
+    if (!firstPw || firstPw.length < 8) {
+      alert('ตั้งรหัสผ่านไม่สำเร็จ กรุณาลองใหม่');
+      return;
+    }
+    localStorage.setItem('tcda_admin_pw', firstPw);
+    alert('ตั้งรหัสผ่านเรียบร้อยแล้ว กรุณาเข้าสู่ระบบอีกครั้ง');
+    return;
+  }
+  if (!pw) {
+    alert('กรุณาใส่รหัสผ่าน');
+    return;
+  }
   if (pw === stored) {
     document.getElementById('adminLogin').style.display = 'none';
     document.getElementById('adminApp').style.display = 'flex';
@@ -885,6 +901,7 @@ async function renderEvents() {
       <div style="flex:1">
         <strong>${e.title_th || ''}</strong><br>
         <small style="color:var(--muted)">${e.date || ''} · ${e.venue || ''}</small>
+        ${e.register_url ? `<br><a href="${e.register_url}" target="_blank" style="font-size:12px;color:var(--sky)">🔗 ${e.register_url}</a>` : ''}
         ${e.photo ? `<br><small style="color:var(--mint)">☁️ Supabase Storage</small>` : ''}
       </div>
       <button class="action-btn" onclick="startEditEventByIndex(${idx})">✏️</button>
@@ -895,7 +912,7 @@ async function renderEvents() {
 function startEditEventByIndex(index) {
   const e = eventsCache[index];
   if (!e) return;
-  startEditEvent(e.id, e.title_th || '', e.title_en || '', e.date || '', e.venue || '', e.desc_th || '', e.photo || '');
+  startEditEvent(e.id, e.title_th || '', e.title_en || '', e.date || '', e.venue || '', e.register_url || '', e.desc_th || '', e.desc_en || '', e.photo || '');
 }
 
 function deleteEventByIndex(index) {
@@ -904,14 +921,16 @@ function deleteEventByIndex(index) {
   deleteEvent(e.id, e.photo || '');
 }
 
-function startEditEvent(id, title_th, title_en, date, venue, desc_th, photo) {
+function startEditEvent(id, title_th, title_en, date, venue, register_url, desc_th, desc_en, photo) {
   editingEventId = id;
   editingEventPhoto = photo || '';
   document.getElementById('ev-title-th').value = title_th || '';
   document.getElementById('ev-title-en').value = title_en || '';
   document.getElementById('ev-date').value = date || '';
   document.getElementById('ev-venue').value = venue || '';
+  document.getElementById('ev-register-url').value = register_url || '';
   document.getElementById('ev-desc-th').value = desc_th || '';
+  document.getElementById('ev-desc-en').value = desc_en || '';
   const prev = document.getElementById('ev-preview');
   if (prev) {
     prev.src = photo || '';
@@ -942,7 +961,9 @@ async function addEvent() {
     title_en: get('ev-title-en'),
     date: get('ev-date'),
     venue: get('ev-venue'),
-    desc_th: get('ev-desc-th')
+    register_url: get('ev-register-url'),
+    desc_th: get('ev-desc-th'),
+    desc_en: get('ev-desc-en')
   };
 
   // ถ้าแก้ไข ให้ update
@@ -981,7 +1002,7 @@ async function deleteEvent(id, photoUrl) {
 }
 
 function clearEventForm() {
-  ['ev-title-th','ev-title-en','ev-date','ev-venue','ev-desc-th'].forEach(id => {
+  ['ev-title-th','ev-title-en','ev-date','ev-venue','ev-register-url','ev-desc-th','ev-desc-en'].forEach(id => {
     const el = document.getElementById(id); if (el) el.value = '';
   });
   const ph = document.getElementById('ev-photo'); if (ph) ph.value = '';
@@ -1214,9 +1235,10 @@ function saveFbUrl() {
 function saveAdminPw() {
   const cur = (document.getElementById('pw-current') || {}).value || '';
   const nw = (document.getElementById('pw-new') || {}).value || '';
-  const stored = localStorage.getItem('tcda_admin_pw') || 'admin123';
+  const stored = localStorage.getItem('tcda_admin_pw') || '';
+  if (!stored) return alert('ยังไม่ได้ตั้งรหัสผ่านผู้ดูแลระบบ');
   if (cur !== stored) return alert('รหัสผ่านปัจจุบันไม่ถูกต้อง');
-  if (!nw) return alert('กรุณาใส่รหัสผ่านใหม่');
+  if (!nw || nw.length < 8) return alert('รหัสผ่านใหม่ต้องมีอย่างน้อย 8 ตัวอักษร');
   localStorage.setItem('tcda_admin_pw', nw);
   alert('✅ เปลี่ยนรหัสผ่านแล้ว');
 }
