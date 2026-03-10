@@ -626,9 +626,32 @@ function isLocalOnly(lsKey) {
   return localStorage.getItem(`${lsKey}__local_only`) === '1';
 }
 
+async function trySyncLocalToSupabase(table, lsKey, rows) {
+  if (!sb || !Array.isArray(rows) || rows.length === 0) return false;
+  try {
+    const { error } = await sb.from(table).insert(rows);
+    if (error) {
+      console.warn(`sync ${table} failed:`, error.message || error);
+      return false;
+    }
+    setLocalOnly(lsKey, false);
+    return true;
+  } catch (e) {
+    console.warn(`sync ${table} error:`, e);
+    return false;
+  }
+}
+
 async function sbFetch(table, lsKey, fallback) {
   if (fallback === undefined) fallback = [];
-  if (isLocalOnly(lsKey)) return getData(lsKey, fallback);
+  if (isLocalOnly(lsKey)) {
+    const local = getData(lsKey, fallback);
+    if (sb && Array.isArray(local) && local.length > 0) {
+      const synced = await trySyncLocalToSupabase(table, lsKey, local);
+      if (synced) return local;
+    }
+    return local;
+  }
   // ลอง Supabase ก่อน
   if (sb) {
     try {
@@ -639,7 +662,12 @@ async function sbFetch(table, lsKey, fallback) {
           return data;
         }
         const local = getData(lsKey, []);
-        if (local.length > 0) return local;
+        if (local.length > 0) {
+          // ถ้า Supabase ยังว่าง แต่เครื่องนี้มีข้อมูลเดิม ให้ sync ขึ้น cloud
+          const synced = await trySyncLocalToSupabase(table, lsKey, local);
+          if (synced) return local;
+          return local;
+        }
       }
     } catch(e) { console.warn('sbFetch error:', e); }
   }
