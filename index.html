@@ -1406,7 +1406,7 @@ async function submitMem() {
     const fname   = document.getElementById('f-fname')?.value?.trim();
     const dob     = document.getElementById('f-dob')?.value;
     const phone   = document.getElementById('f-phone')?.value?.trim();
-    const email   = document.getElementById('f-email')?.value?.trim();
+    const email   = document.getElementById('f-email')?.value?.trim().toLowerCase();
     const idcard  = document.getElementById('f-idcard')?.value?.trim();
     const address = document.getElementById('f-address')?.value?.trim();
     const type    = document.getElementById('f-type')?.value;
@@ -1542,12 +1542,25 @@ function showLoginGate(message, isError = false) {
 }
 
 async function loadApprovedMemberByEmail(email) {
-    const { data, error } = await sb.from('members')
+    const normalizedEmail = String(email || '').trim().toLowerCase();
+    if (!normalizedEmail) return null;
+
+    // 1) Exact match with normalized email
+    let { data, error } = await sb.from('members')
         .select('*')
-        .eq('email', email)
-        .single();
-    if (error || !data) return null;
-    return data;
+        .eq('email', normalizedEmail)
+        .maybeSingle();
+    if (!error && data) return data;
+
+    // 2) Case-insensitive fallback for legacy rows
+    ({ data, error } = await sb.from('members')
+        .select('*')
+        .ilike('email', normalizedEmail)
+        .limit(1)
+        .maybeSingle());
+    if (!error && data) return data;
+
+    return null;
 }
 
 async function handleAuthFromUrl() {
@@ -1631,7 +1644,7 @@ async function handleAuthFromUrl() {
 
 // --- 7. Member Login ---
 async function doLogin() {
-    const email = document.getElementById('l-email')?.value?.trim();
+    const email = document.getElementById('l-email')?.value?.trim().toLowerCase();
     const pw    = document.getElementById('l-pw')?.value;
     if (!email || !pw) { alert('กรุณากรอกอีเมลและรหัสผ่าน'); return; }
 
